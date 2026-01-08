@@ -25,12 +25,17 @@ export const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(Password, 10);
+    
+
+    // 🔥 Generate companyID ONCE at signup
+    const companyID = Math.floor(Date.now() / 1000);
 
     const user = await User.create({
       firstName: FirstName,
       lastName: LastName ?? null,
       email: Email,
       password: hashedPassword,
+      companyID, // ✅ STORED
       companyName: CompanyName,
       address: Address,
       city: City,
@@ -46,9 +51,14 @@ export const signup = async (req, res) => {
         firstName: user.firstName,
         email: user.email,
       },
+      company: {
+        companyID: user.companyID,
+        companyName: user.companyName,
+        currencySymbol: user.currencySymbol,
+      },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Signup error:", err);
     res.status(500).send("Signup failed");
   }
 };
@@ -68,6 +78,7 @@ export const login = async (req, res) => {
       {
         userId: user._id,
         email: user.email,
+        companyID: user.companyID, // 🔥 MUST
         companyName: user.companyName,
         currencySymbol: user.currencySymbol,
       },
@@ -78,7 +89,7 @@ export const login = async (req, res) => {
     );
 
     // 🍪 HTTP-ONLY COOKIE
-    res.cookie("auth_token", token, {
+    res.cookie("authToken", token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -94,6 +105,7 @@ export const login = async (req, res) => {
         email: user.email,
       },
       company: {
+        companyID: user.companyID,
         companyName: user.companyName,
         currencySymbol: user.currencySymbol,
       },
@@ -139,7 +151,7 @@ export const me = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.userId).select(
-      "firstName email companyName currencySymbol"
+      "firstName email companyID companyName currencySymbol"
     );
 
     if (!user) {
@@ -150,6 +162,7 @@ export const me = async (req, res) => {
       userID: user._id,
       email: user.email,
       firstName: user.firstName,
+      companyID: user.companyID,
       companyName: user.companyName,
       currencySymbol: user.currencySymbol,
     });
@@ -160,7 +173,7 @@ export const me = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.clearCookie("auth_token", {
+  res.clearCookie("authToken", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

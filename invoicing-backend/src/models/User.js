@@ -32,6 +32,12 @@ const userSchema = new mongoose.Schema(
     },
 
     // ===== COMPANY INFO =====
+      
+    companyID: {
+      type: Number,
+      required: true,
+      index: true,
+    },
     companyName: {
       type: String,
       required: true,

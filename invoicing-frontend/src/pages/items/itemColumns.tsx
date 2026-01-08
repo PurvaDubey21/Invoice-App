@@ -1,9 +1,11 @@
-import type { GridColDef } from "@mui/x-data-grid";
+import type { GridColDef} from "@mui/x-data-grid";
 import { IconButton, Avatar } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import type { Item } from "./item.types";
 
-export const columns: GridColDef[] = [
+
+export const columns: GridColDef<Item>[] = [
   {
     field: "picture",
     headerName: "",
@@ -29,14 +31,16 @@ export const columns: GridColDef[] = [
     headerName: "Sale Rate",
     type: "number",
     align: "right",
-    valueFormatter: ({ value }) => `₹${Number(value).toFixed(2)}`,
+    renderCell: (params) =>
+      `₹${Number(params.row.saleRate ?? 0).toFixed(2)}`,
   },
   {
     field: "discountPct",
     headerName: "Discount %",
     type: "number",
     align: "right",
-    valueFormatter: ({ value }) => `${Number(value).toFixed(2)}%`,
+    renderCell: (params) =>
+      `${Number(params.row.discountPct ?? 0).toFixed(2)}%`,
   },
   {
     field: "actions",

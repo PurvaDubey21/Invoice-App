@@ -11,8 +11,8 @@ export const ItemTable = () => {
       columns={columns}
       loading={isLoading}
       autoHeight
-      getRowId={(row) => row.itemID}
-      pageSizeOptions={[10, 25, 50]}
+      getRowId={(row) => row._id}
+       pageSizeOptions={[10, 25, 50]}
       disableRowSelectionOnClick
     />
   );

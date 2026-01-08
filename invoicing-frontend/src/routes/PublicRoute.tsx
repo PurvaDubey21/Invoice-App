@@ -1,14 +1,5 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useGetMeQuery } from "../services/auth.rtk";
+import {  Outlet } from "react-router-dom";
 
 export const PublicRoute = () => {
-  const { data, isLoading } = useGetMeQuery();
-
-  if (isLoading) return null;
-
-  if (data) {
-    return <Navigate to="/invoices" replace />; // NOT /invoice
-  }
-
-  return <Outlet />;
+ return <Outlet />;
 };

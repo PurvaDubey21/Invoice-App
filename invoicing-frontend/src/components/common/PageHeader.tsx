@@ -1,4 +1,7 @@
 import { Box, Typography, ButtonGroup, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useLogoutMutation } from "../../services/auth.rtk";
+import { baseApi } from "../../api/baseQuery";
 
 
 const filters = ["Today", "Week", "Month", "Year", "Custom"];
@@ -11,6 +14,22 @@ export const PageHeader = ({
   value: string;
   onChange: (val: string) => void; // ✅ FIXED
 }) => {
+
+  const navigate = useNavigate();
+  const [logout, { isLoading }] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+
+      // 🔥 clear all RTK Query cache (auth + invoice + items)
+      baseApi.util.resetApiState();
+
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
   return (
     <Box
       display="flex"
@@ -27,7 +46,7 @@ export const PageHeader = ({
       </Typography>
 
       {/* RIGHT: FILTER BUTTONS */}
-     
+     <Box display="flex" alignItems="center">
       <ButtonGroup
         variant="outlined"
         sx={{
@@ -65,6 +84,23 @@ export const PageHeader = ({
           </Button>
         ))}
       </ButtonGroup>
+      {/* 🔐 LOGOUT BUTTON (UI CONSISTENT) */}
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleLogout}
+          disabled={isLoading}
+          sx={{
+            borderRadius: "999px",
+            textTransform: "none",
+            fontSize: 12,
+            padding: "4px 14px",
+            ml: 2,
+          }}
+        >
+          Logout
+        </Button>
+      </Box>
     </Box>
   );
 };
