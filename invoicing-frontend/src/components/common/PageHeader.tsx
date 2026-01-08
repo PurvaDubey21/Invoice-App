@@ -36,7 +36,7 @@ export const PageHeader = ({
             textTransform: "none",
             fontSize: 12,
             padding: "4px 14px",
-            borderColor: "#d1d2d4",
+            borderColor: "#fff",
             ml:2
             
             
