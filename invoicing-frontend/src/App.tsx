@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import SignupPage from "./pages/auth/SignupPage";
 import LoginPage from "./pages/auth/LoginPage";
-import { InvoicePage } from "./features/invoices/InvoicePage";
+import { InvoicePage } from "./pages/invoices/InvoicePage";
 import { ItemListPage } from "./pages/items/ItemListPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";

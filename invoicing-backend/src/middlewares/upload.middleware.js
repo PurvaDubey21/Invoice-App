@@ -5,7 +5,8 @@ import fs from "fs";
 /* ---------------- CONFIG ---------------- */
 
 // Item images upload folder
-const uploadDir = "uploads/items";
+const uploadDir = path.join(process.cwd(), "uploads/items");
+
 
 // 🔥 Ensure folder exists
 if (!fs.existsSync(uploadDir)) {
@@ -16,7 +17,7 @@ if (!fs.existsSync(uploadDir)) {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueName =

@@ -1,5 +1,5 @@
 import { PieChart, Pie, Tooltip, ResponsiveContainer } from "recharts";
-import type { TopItem } from "../invoices/invoice.types";
+import type { TopItem } from "../../types/invoice.types";
 
 interface Props {
   data: TopItem[];

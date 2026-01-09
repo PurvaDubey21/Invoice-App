@@ -1,5 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import type { InvoiceTrend } from "../invoices/invoice.types";
+import type { InvoiceTrend } from "../../types/invoice.types";
 
 
 interface Props {

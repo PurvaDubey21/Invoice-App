@@ -1,18 +1,22 @@
 import { DataGrid } from "@mui/x-data-grid";
-import { useGetItemsQuery } from "../../services/itemApiRtk";
-import { columns } from "../items/itemColumns";
+import { useGetItemListQuery  } from "../../services/itemApiRtk";
+import { getItemColumns } from "./itemColumns";
+import type{ Item } from "../../types/itemTypes";
 
-export const ItemTable = () => {
-  const { data = [], isLoading } = useGetItemsQuery({});
+interface Props {
+  onEditItem: (item: Item) => void;
+}
+
+export const ItemTable = ({ onEditItem }: Props) => {
+  const { data = [], isLoading } = useGetItemListQuery ({});
 
   return (
     <DataGrid
       rows={data}
-      columns={columns}
+      columns={getItemColumns(onEditItem)}
       loading={isLoading}
       autoHeight
       getRowId={(row) => row._id}
-       pageSizeOptions={[10, 25, 50]}
       disableRowSelectionOnClick
     />
   );

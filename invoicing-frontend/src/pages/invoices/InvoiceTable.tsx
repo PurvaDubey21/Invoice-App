@@ -5,7 +5,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import PrintIcon from "@mui/icons-material/Print";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import type { Invoice } from "../invoices/invoice.types"; // ✅ reuse type
+import type { Invoice } from "../../types/invoice.types"; // ✅ reuse type
 
 interface Props {
   rows: Invoice[];

@@ -142,7 +142,7 @@ export const getCompanyLogoUrl = async (req, res) => {
 
 export const me = async (req, res) => {
   try {
-    const token = req.cookies.auth_token;
+    const token = req.cookies.authToken;
 
     if (!token) {
       return res.status(401).json({ error: "Not authenticated" });

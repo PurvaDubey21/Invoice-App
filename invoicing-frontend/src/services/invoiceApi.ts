@@ -1,10 +1,10 @@
-import { baseApi } from "../../api/baseQuery";
+import { baseApi } from "../api/baseQuery";
 import type {
   Invoice,
   InvoiceMetrics,
   InvoiceTrend,
   TopItem,
-} from "../invoices/invoice.types";
+} from "../types/invoice.types";
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
