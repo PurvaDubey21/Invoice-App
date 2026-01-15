@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import SignupPage from "./pages/auth/SignupPage";
 import LoginPage from "./pages/auth/LoginPage";
 import { InvoicePage } from "./pages/invoices/InvoicePage";
@@ -9,6 +10,7 @@ import { PublicRoute } from "./routes/PublicRoute";
 
 function App() {
   return (
+    <>
     <Routes>
       {/* DEFAULT */}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -31,6 +33,8 @@ function App() {
       {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 }
 

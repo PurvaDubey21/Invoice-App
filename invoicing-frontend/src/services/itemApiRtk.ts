@@ -113,6 +113,8 @@ export const {
   useUpdateItemMutation,
   useDeleteItemMutation,
   useCheckDuplicateItemNameQuery,
+   // 🔥 BOTH hooks
+  useLazyCheckDuplicateItemNameQuery,
   useUploadItemPictureMutation,
   useGetItemPictureQuery,
   useGetItemThumbnailQuery,

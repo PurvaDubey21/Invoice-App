@@ -1,4 +1,3 @@
-import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef } from "@mui/x-data-grid";
 import { IconButton, Stack } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -6,6 +5,7 @@ import PrintIcon from "@mui/icons-material/Print";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import type { Invoice } from "../../types/invoice.types"; // ✅ reuse type
+import { DataTable } from "../../components/common/DataTable";
 
 interface Props {
   rows: Invoice[];
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const InvoiceTable = ({ rows, loading, onDelete }: Props) => {
-  const columns: GridColDef<Invoice>[] = [
+  const columns: GridColDef[] = [
     { field: "invoiceNo", headerName: "Invoice No", flex: 1 },
 
     { field: "invoiceDate", headerName: "Date", flex: 1 },
@@ -65,15 +65,12 @@ export const InvoiceTable = ({ rows, loading, onDelete }: Props) => {
   ];
 
   return (
-    <DataGrid
-      autoHeight
+    <DataTable
       rows={rows}
       columns={columns}
       loading={loading}
-      getRowId={(row) => row.invoiceID} // ✅ correct
-      disableRowSelectionOnClick
-      pageSizeOptions={[10, 25, 50]}
-      sx={{ border: "none" }}
+      height={400}
+      getRowId={(row) => row.invoiceID}   // ✅ THIS WAS MISSING
     />
   );
 };
