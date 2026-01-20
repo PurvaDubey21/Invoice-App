@@ -30,7 +30,8 @@ export const getItemById = async (req, res) => {
 /* ---------------- LOOKUP LIST ---------------- */
 export const getItemLookupList = async (req, res) => {
   const { companyID } = req.user;
-
+console.log("user:", req.user);
+console.log("companyID:", req.user.companyID);
   const items = await Item.find(
     { companyID },
     { itemName: 1, saleRate: 1, discountPct: 1 }

@@ -17,6 +17,7 @@ export const DataTable = <T,>({
   height = 450,
   getRowId,
   columnVisibilityModel,
+  
 }: DataTableProps<T>) => {
   return (
     <div
@@ -38,6 +39,7 @@ export const DataTable = <T,>({
         disableRowSelectionOnClick
         // 👇 FORWARD TO MUI GRID
         columnVisibilityModel={columnVisibilityModel}
+        
         slots={{
           noRowsOverlay: () => <NoRowsOverlay message="No items found" />,
         }}

@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import SignupPage from "./pages/auth/SignupPage";
 import LoginPage from "./pages/auth/LoginPage";
 import { InvoicePage } from "./pages/invoices/InvoicePage";
+import  InvoiceEditor  from "./pages/invoices/InvoiceEditor";
 import { ItemListPage } from "./pages/items/ItemListPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
@@ -24,6 +25,7 @@ function App() {
       {/* PROTECTED ROUTES (login required) */}
       <Route element={<ProtectedRoute />}>
         <Route path="/invoices" element={<InvoicePage />} />
+         <Route path="/invoices/editor" element={<InvoiceEditor />} />
          <Route path="/items" element={<ItemListPage />} /> 
 
         {/* future */}

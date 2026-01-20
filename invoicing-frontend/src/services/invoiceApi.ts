@@ -5,15 +5,16 @@ import type {
   InvoiceTrend,
   TopItem,
 } from "../types/invoice.types";
+import type { 
+  SaveInvoicePayload, 
+  InvoiceApiResponse, 
+ SaveInvoiceResponse 
+} from "../types/invoiceEditor.types";
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-
     // ✅ Invoice List
-    getInvoiceList: builder.query<
-      Invoice[],
-      { from?: string; to?: string }
-    >({
+    getInvoiceList: builder.query<Invoice[], { from?: string; to?: string }>({
       query: (range) => ({
         url: "/invoice/getlist",
         params: range,
@@ -38,10 +39,7 @@ export const invoiceApi = baseApi.injectEndpoints({
     }),
 
     // ✅ Top Items
-    getTopItems: builder.query<
-      TopItem[],
-      { from: string; to: string }
-    >({
+    getTopItems: builder.query<TopItem[], { from: string; to: string }>({
       query: (range) => ({
         url: "/invoice/topitems",
         params: range,
@@ -57,8 +55,33 @@ export const invoiceApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Invoice"],
     }),
+    // ✅ Get single invoice (Editor - Edit mode)
+    getInvoiceById: builder.query< InvoiceApiResponse,
+  { invoiceID: number }
+  >({
+      query: ({ invoiceID }) => ({
+        url: "/invoice/getlist",
+        params: { invoiceID },
+      }),
+      providesTags: ["Invoice"],
+    }),
 
+    // ✅ Insert / Update Invoice (Editor Save)
+    saveInvoice: builder.mutation<
+     SaveInvoiceResponse,   // ✅ API response
+     SaveInvoicePayload     // ✅ request body
+    >({
+      query: (payload) => ({
+        url: "/invoice/insertupdate",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Invoice"],
+    }),
+    // ✅ Item dropdown for invoice lines
+    
   }),
+
   overrideExisting: false,
 });
 
@@ -68,4 +91,9 @@ export const {
   useGetInvoiceTrend12mQuery,
   useGetTopItemsQuery,
   useDeleteInvoiceMutation,
+
+  // 🔥 Invoice Editor hooks
+  useGetInvoiceByIdQuery,
+  useSaveInvoiceMutation,
+  
 } = invoiceApi;

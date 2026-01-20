@@ -107,16 +107,7 @@ const LoginPage = () => {
               margin="normal"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              sx={{
-                "& label.Mui-focused": {
-                  color: "#525355", // 👈 label color on focus
-                },
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#525355", // 👈 border color on focus
-                  },
-                },
-              }}
+              
             />
           </Typography>
 
@@ -142,16 +133,6 @@ const LoginPage = () => {
                     </IconButton>
                   </InputAdornment>
                 ),
-              }}
-              sx={{
-                "& label.Mui-focused": {
-                  color: "#525355", // 👈 label color on focus
-                },
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#525355", // 👈 border color on focus
-                  },
-                },
               }}
             />
           </Typography>

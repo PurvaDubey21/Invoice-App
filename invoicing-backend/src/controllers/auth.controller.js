@@ -5,7 +5,12 @@ import jwt from "jsonwebtoken";
 export const signup = async (req, res) => {
   try {
      console.log("BODY:", req.body);
-    console.log("FILE:", req.file); // 🔥 THIS
+    console.log("FILE:", req.file); // 🔥
+    //  THIS
+
+    console.log("cookies:", req.cookies);
+console.log("user:", req.user);
+console.log("companyID:", req.user?.companyID);
     const {
       FirstName,
       LastName,
