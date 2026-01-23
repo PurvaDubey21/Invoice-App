@@ -17,6 +17,7 @@ import InvoiceDetails from "../../components/InvoiceEditor/InvoiceDetails";
 import InvoiceLineItems from "../../components/InvoiceEditor/InvoiceLineItems";
 import InvoiceTotals from "../../components/InvoiceEditor/InvoiceTotals";
 import  { validateInvoiceDetails } from "../../utils/invoiceDetails.validators";
+import { hasAtLeastOneValidLine } from "../../utils/invoiceLine.validators";
 
 import type {
   InvoiceEditorState,
@@ -37,8 +38,6 @@ const createEmptyLine = (): InvoiceLine => ({
   amount: 0,
 });
 
-const hasAtLeastOneQty = (lines: InvoiceLine[]) =>
-  lines.some((l) => l.qty > 0);
 
 
 const InvoiceEditor: React.FC = () => {
@@ -169,12 +168,14 @@ const InvoiceEditor: React.FC = () => {
   setHeaderErrors(headerErrors);
 
   if (Object.keys(headerErrors).length > 0) {
+    console.log("Header validation failed:", headerErrors);
     return; // ❌ stop save
   }
 
   // 2️⃣ LINE-LEVEL CROSS VALIDATION (🔥 THIS PART)
-  if (!hasAtLeastOneQty(invoiceState.lines)) {
-    alert("Add at least one line with Qty > 0.");
+  const hasValidLine = hasAtLeastOneValidLine(invoiceState.lines);
+  if (!hasValidLine) {
+    alert("Please add at least one invoice line with an item and qty > 0.");
     return; // ❌ stop save
   }
     const payload = {

@@ -28,10 +28,7 @@ export const signupApi = async (data: SignupFormValues) => {
   const res = await axiosInstance.post(
     `${import.meta.env.VITE_API_BASE_URL}/Auth/Signup`,
     formData,
-    {
-      withCredentials: true,
-      // ❌ DO NOT set Content-Type
-    }
+   
   );
 
   return res.data;
@@ -52,9 +49,6 @@ export const loginApi = async (payload: LoginFormValues) =>{
   const res = await axiosInstance.post(
     `${import.meta.env.VITE_API_BASE_URL}/Auth/Login`,
     payload,
-    {
-      withCredentials: true,
-    }
   );
 
   return res.data;

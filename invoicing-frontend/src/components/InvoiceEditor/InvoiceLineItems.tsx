@@ -47,7 +47,7 @@ const InvoiceLineItems: React.FC<Props> = ({ lines, onChange }) => {
   >({});
   const [selectedRowId, setSelectedRowId] = React.useState<string | null>(null);
 
-  const { data: itemLookupList = [] } = useGetItemLookupListQuery();
+  const { data: itemLookupList = []} = useGetItemLookupListQuery();
   console.log("itemLookupList:", itemLookupList);
   /* ----------------------------------
      Line handlers
@@ -197,6 +197,7 @@ const InvoiceLineItems: React.FC<Props> = ({ lines, onChange }) => {
                 {/* Item Dropdown (dummy for now) */}
                 <Box flex={2}>
                   <TextField
+                    label="Select Item"
                     size="small"
                     select
                     fullWidth

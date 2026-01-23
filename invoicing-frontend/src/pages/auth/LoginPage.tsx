@@ -1,3 +1,4 @@
+// cyzo@mailinator.com
 import { useState } from "react";
 import {
   Box,
@@ -33,39 +34,49 @@ const LoginPage = () => {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    setError("");
+  setError("");
 
-    if (!isValidEmail(email)) {
-      setError("Enter a valid email.");
-      return;
+  if (!isValidEmail(email)) {
+    setError("Enter a valid email.");
+    return;
+  }
+  
+  if (!isValidPassword(password)) {
+    setError("Password must be 8–20 characters.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // 🔹 1️⃣ Call login API
+    const res = await loginApi({
+      email: email.trim(),
+      password,
+      rememberMe,
+    });
+
+    // 🔑 2️⃣ SAVE TOKEN (MOST IMPORTANT FIX)
+    localStorage.setItem("token", res.token);
+
+    // (optional but recommended)
+    localStorage.setItem("user", JSON.stringify(res.user));
+    localStorage.setItem("company", JSON.stringify(res.company));
+
+    // 🚀 3️⃣ Redirect after successful login
+    navigate("/invoices", { replace: true });
+
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      setError(err.response?.data || "Email or password is wrong.");
+    } else {
+      setError("Unexpected error occurred");
     }
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (!isValidPassword(password)) {
-      setError("Password must be 8–20 characters.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await loginApi({
-        email: email.trim(),
-        password,
-        rememberMe,
-      });
-
-      // ✅ Cookie already set by backend
-      navigate("/invoices");
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || "Email or password is wrong.");
-      } else {
-        setError("Unexpected error occurred");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Box

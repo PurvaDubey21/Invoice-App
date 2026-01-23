@@ -9,7 +9,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getItemColumns = (
   onEditItem: (item: Item) => void,
-  onDeletItem: (item: string) => void
+  onDeletItem: (item: number) => void
 ): GridColDef<Item>[] => [
   {
   field: "pictureUrl", // 👈 MUST match backend field
@@ -19,11 +19,11 @@ export const getItemColumns = (
   filterable: false,
   hideable: false,
   renderCell: (params) => {
-    const imageUrl = params.row.thumbnailUrl
-        ? `${BASE_URL}${params.row.thumbnailUrl}`
-        : params.row.pictureUrl
-        ? `${BASE_URL}${params.row.pictureUrl}`
-        : undefined;
+     const imageUrl = params.row.thumbnailUrl
+      ? `${BASE_URL}${params.row.thumbnailUrl}`
+      : params.row.pictureUrl
+      ? `${BASE_URL}${params.row.pictureUrl}`
+      : undefined;
 
     return (
       
@@ -69,14 +69,14 @@ export const getItemColumns = (
      
   },
   {
-    field: "saleRate",
+    field: "salesRate",
     headerName: "Sale Rate",
     type: "number",
     hideable: true,
     align: "right",
     width: 120,
     renderCell: (params) =>
-      `₹${Number(params.row.saleRate ?? 0).toFixed(2)}`,
+      `₹${Number(params.row.salesRate ?? 0).toFixed(2)}`,
   },
   {
     field: "discountPct",
@@ -103,7 +103,7 @@ export const getItemColumns = (
           <EditIcon fontSize="small" />
         </IconButton>
         <IconButton size="small" color="error"
-          onClick={()=> onDeletItem(params.row._id)}>
+          onClick={()=> onDeletItem(params.row.itemID)}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </>

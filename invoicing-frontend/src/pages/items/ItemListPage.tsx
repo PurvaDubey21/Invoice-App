@@ -21,14 +21,16 @@ import type { Item } from "../../types/itemTypes";
 import { ItemCardList } from "./ItemCardList";
 
 export const ItemListPage = () => {
+
+  console.log("items render");
   /* ---------------- API ---------------- */
-  const { data: items = [], isLoading } = useGetItemListQuery();
+  const { data: items = [], isLoading, refetch } = useGetItemListQuery();
   const [deleteItem] = useDeleteItemMutation();
 
   /* ---------------- UI STATE ---------------- */
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Item | null>(null);
-  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(
     ITEM_COLUMNS_CONFIG.filter((c) => c.defaultVisible).map((c) => c.field)
@@ -43,7 +45,7 @@ export const ItemListPage = () => {
 
   /* ---------------- SEARCH ---------------- */
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 400);
+  const debouncedSearch = useDebounce(search, 200);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -56,6 +58,7 @@ export const ItemListPage = () => {
 
   /* ---------------- EDIT ITEM ---------------- */
   const handleEditItem = (item: Item) => {
+    console.log("EDIT ITEM", item); // ✅ THIS
     setEditItem(item); // edit mode
     setDialogOpen(true);
   };
@@ -72,7 +75,7 @@ export const ItemListPage = () => {
 
     try {
       setIsDeleting(true);
-      await deleteItem(deleteItemId).unwrap();
+      await deleteItem(deleteItemId.toString()).unwrap();
       toast.success("Item deleted successfully"); // 🔥 SUCCESS TOAST
       setDeleteItemId(null);
       // 🔥 RTK Query auto-refetches list
@@ -194,6 +197,7 @@ export const ItemListPage = () => {
           // RTK Query list refetch ho jaati hai
           setDialogOpen(false);
           setEditItem(null);
+          refetch();
         }}
       />
 

@@ -1,5 +1,5 @@
 import { baseApi } from "../api/baseQuery";
-import type { Item, ItemPayload } from "../types/itemTypes";
+import type {  Item, ItemPayload } from "../types/itemTypes";
 
 export const itemApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -20,37 +20,25 @@ export const itemApi = baseApi.injectEndpoints({
 
     /* ================= LOOKUP LIST ================= */
     getItemLookupList: builder.query<
-      Pick<Item, "_id" | "itemName" | "saleRate" | "discountPct">[],
+      Pick<Item, "itemID" | "itemName" | "salesRate" | "discountPct">[],
       void
     >({
       query: () => "/Item/GetLookupList",
+      providesTags: ["Item"],
     }),
 
-    /* ================= INSERT ================= */
-    insertItem: builder.mutation<
-      { itemID: string; updatedOn: string },
-      ItemPayload
-    >({
-      query: (body) => ({
-        url: "/Item",
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["Item"],
-    }),
-
-    /* ================= UPDATE ================= */
-    updateItem: builder.mutation<
-      { itemID: string; updatedOn: string },
-      { id: string; body: ItemPayload & { updatedOnPrev: string } }
-    >({
-      query: ({ id, body }) => ({
-        url: `/Item/${id}`,          // ✅ EXACT MATCH
-        method: "PUT",
-        body,
-      }),
-      invalidatesTags: ["Item"],
-    }),
+   /* ================= SAVE (INSERT + UPDATE) ================= */
+saveItem: builder.mutation<
+  { itemID: number; updatedOn: string },
+   ItemPayload
+>({
+  query: (body) => ({
+    url: "/Item",              // ✅ BACKEND EXACT MATCH
+    method: "POST",            // ✅ BACKEND RULE
+    body,
+  }),
+  invalidatesTags: ["Item"],
+}),
 
     /* ================= DELETE ================= */
     deleteItem: builder.mutation<
@@ -67,7 +55,7 @@ export const itemApi = baseApi.injectEndpoints({
     /* ================= DUPLICATE NAME CHECK ================= */
     checkDuplicateItemName: builder.query<
       { exists: boolean },
-      { ItemName: string; ExcludeID?: string }
+      { ItemName: string; ExcludeID?: number }
     >({
       query: (params) => ({
         url: "/Item/CheckDuplicateItemName",  // ✅ EXACT MATCH
@@ -78,14 +66,16 @@ export const itemApi = baseApi.injectEndpoints({
     /* ================= UPLOAD / UPDATE PICTURE ================= */
     uploadItemPicture: builder.mutation<
       { url: string },
-      { id: string; file: File }
+      { id: number; file: File }
     >({
       query: ({ id, file }) => {
         const formData = new FormData();
+        formData.append("ItemID", String(id));
         formData.append("file", file);
+        
 
         return {
-          url: `/Item/UpdateItemPicture/${id}`, // ✅ EXACT MATCH
+          url: `/Item/UpdateItemPicture`, // ✅ EXACT MATCH
           method: "POST",
           body: formData,
         };
@@ -109,8 +99,7 @@ export const {
   useGetItemListQuery,
   useGetItemByIdQuery,
   useGetItemLookupListQuery,
-  useInsertItemMutation,
-  useUpdateItemMutation,
+  useSaveItemMutation,
   useDeleteItemMutation,
   useCheckDuplicateItemNameQuery,
    // 🔥 BOTH hooks

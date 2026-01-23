@@ -21,3 +21,12 @@ export function validateInvoiceLine(line: InvoiceLine): InvoiceLineErrors {
 
   return errors;
 }
+
+export const hasAtLeastOneValidLine = (
+  lines: InvoiceLine[]
+): boolean => {
+  return lines.some(
+    (l) => l.itemID && l.qty > 0
+  );
+};
+

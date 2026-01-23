@@ -23,7 +23,7 @@ export const ITEM_COLUMNS_CONFIG: ItemColumnConfig[] = [
     defaultVisible: true,
   },
   {
-    field: "saleRate",
+    field: "salesRate",
     label: "Sale Rate",
     exportable: true,
     defaultVisible: true,

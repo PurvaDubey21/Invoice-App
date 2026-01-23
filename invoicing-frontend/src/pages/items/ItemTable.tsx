@@ -8,7 +8,7 @@ interface Props {
   loading: boolean;
   visibleColumns: string[];
   onEditItem: (item: Item) => void;
-  onDeleteItem: (id: string) => void;
+  onDeleteItem: (id: number) => void;
 }
 
 export const ItemTable = ({
@@ -38,7 +38,7 @@ export const ItemTable = ({
       columns={getItemColumns(onEditItem, onDeleteItem)}
       loading={loading}
       height={450}
-      getRowId={(row) => row._id}
+      getRowId={(row) => row.itemID}
       columnVisibilityModel={columnVisibilityModel}
       
     />

@@ -12,7 +12,7 @@ export const authApi = baseApi.injectEndpoints({
 
     // ✅ SESSION CHECK
     getMe: builder.query<MeResponse, void>({
-      query: () => "/Auth/Me",
+      query: () => "/Login",
       providesTags: ["Auth"],
     }),
 

@@ -1,9 +1,9 @@
 export interface Item {
-  _id: string;
-  companyID: string;
+  itemID: number;
+  companyID: number;
   itemName: string;
   description?: string | null;
-  saleRate: number;
+  salesRate: number;
   discountPct: number;
   pictureUrl?: string;
   thumbnailUrl?: string;
@@ -11,11 +11,14 @@ export interface Item {
   updatedOn: string;
 }
 
+// INSERT payload (NO itemID, NO updatedOnPrev)
 export interface ItemPayload {
+   itemID?: number;
   itemName: string;
-  description?: string | null;
-  saleRate: number;
+  description?: string;
+  salesRate: number;
   discountPct: number;
+  updatedOnPrev?: string;
   removeImage?: boolean;
 }
 

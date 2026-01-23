@@ -18,12 +18,11 @@ import { useState } from "react";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 import {
-  useInsertItemMutation,
-  useUpdateItemMutation,
+  useSaveItemMutation,
   useUploadItemPictureMutation,
   useLazyCheckDuplicateItemNameQuery,
 } from "../../services/itemApiRtk";
-import type { Item, ItemFormErrors } from "../../types/itemTypes";
+import type { Item, ItemFormErrors, ItemPayload } from "../../types/itemTypes";
 import { validateItemForm } from "../../schemas/item.schema";
 
 interface Props {
@@ -31,7 +30,7 @@ interface Props {
   fullScreen?: boolean;
   onClose: () => void;
   editItem?: Item | null;
-  onSaved: (itemId: string) => void; // 🔥
+  onSaved: () => void; // 🔥
 }
 
 export const ItemDialog = ({
@@ -56,15 +55,14 @@ export const ItemDialog = ({
   const previewUrl = file
     ? URL.createObjectURL(file)
     : !removeImage && editItem?.pictureUrl
-    ? `${import.meta.env.VITE_API_BASE_URL}${editItem.pictureUrl}`
-    : undefined;
+      ? `${import.meta.env.VITE_API_BASE_URL}${editItem.pictureUrl}`
+      : undefined;
 
   const [checkDuplicateName, { isFetching: isCheckingName }] =
     useLazyCheckDuplicateItemNameQuery();
 
   /* ---------------- API ---------------- */
-  const [insertItem] = useInsertItemMutation();
-  const [updateItem] = useUpdateItemMutation();
+  const [saveItem] = useSaveItemMutation();
   const [uploadPicture] = useUploadItemPictureMutation();
 
   /* ---------------- HELPERS ---------------- */
@@ -82,7 +80,7 @@ export const ItemDialog = ({
     if (editItem) {
       setItemName(editItem.itemName);
       setDescription(editItem.description ?? "");
-      setSaleRate(String(editItem.saleRate));
+      setSaleRate(String(editItem.salesRate));
       setDiscountPct(String(editItem.discountPct));
       setFile(null); // 🔥 ensure no stale file
     } else {
@@ -94,10 +92,13 @@ export const ItemDialog = ({
     const name = itemName.trim();
     if (!name) return;
 
+    // 🔥 SAME NAME, SAME ITEM → SKIP CHECK
+    if (editItem && name === editItem.itemName) return;
+
     try {
       const res = await checkDuplicateName({
         ItemName: name,
-        ExcludeID: editItem?._id, // 👈 edit case skip self
+        ExcludeID: editItem?.itemID, // 👈 edit case skip self
       }).unwrap();
 
       if (res.exists) {
@@ -113,7 +114,6 @@ export const ItemDialog = ({
 
   /* ---------------- SAVE ---------------- */
   const handleSave = async () => {
-    /* ---------- STEP 1: VALIDATION ---------- */
     const formErrors = validateItemForm({
       itemName,
       description,
@@ -122,69 +122,84 @@ export const ItemDialog = ({
     });
 
     if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors); // 👈 inline errors show
-      return; // 👈 STOP API CALL
+      setErrors(formErrors);
+      return;
     }
 
     try {
       setIsSaving(true);
-      let itemId = editItem?._id;
 
-      /* ---------- STEP 2: INSERT / UPDATE ---------- */
-      if (editItem) {
-        await updateItem({
-          id: editItem._id,
-          body: {
-            itemName: itemName.trim(),
-            description: description.trim(),
-            saleRate: Number(saleRate),
-            discountPct: Number(discountPct),
-            updatedOnPrev: editItem.updatedOn,
-            removeImage,
-          },
-        }).unwrap();
-      } else {
-        const res = await insertItem({
+      let itemId: number | undefined;
+
+      /* ================= ADD MODE ================= */
+      if (!editItem) {
+        const res = await saveItem({
           itemName: itemName.trim(),
           description: description.trim(),
-          saleRate: Number(saleRate),
+          salesRate: Number(saleRate),
           discountPct: Number(discountPct),
         }).unwrap();
 
-        itemId = res.itemID;
-      }
+        console.log("SAVE ITEM RESPONSE (ADD):", res); // ✅ ADD LOG
+        itemId = res.primaryKeyID;
+      } else {
+        /* ================= EDIT MODE ================= */
 
-      /* ---------- STEP 3: IMAGE UPLOAD ---------- */
-      if (file && itemId) {
+        const payload: ItemPayload = {
+          itemID: editItem.itemID,
+          itemName: itemName.trim(),
+          description: description.trim(),
+          salesRate: Number(saleRate),
+          discountPct: Number(discountPct),
+          updatedOnPrev: editItem.updatedOn ?? editItem.createdOn, // ✅ always fresh
+          removeImage,
+        };
+
+        const res = await saveItem(payload).unwrap();
+        console.log("SAVE ITEM RESPONSE:", res);
+
+        /* 🔥🔥 YAHI ADD KARNA HAI (MOST IMPORTANT) */
+
+        itemId = editItem.itemID;
+      }
+      console.log("FINAL ITEM ID FOR UPLOAD:", itemId);
+      if (typeof itemId !== "number") {
+        toast.error("Failed to save item. Please try again.");
+        return;
+      }
+      /* ================= IMAGE UPLOAD ================= */
+      if (file && typeof itemId === "number") {
         await uploadPicture({ id: itemId, file }).unwrap();
       }
 
-      // ✅ SUCCESS TOAST (RIGHT PLACE)
       toast.success(
-        editItem ? "Item updated successfully" : "Item added successfully"
+        editItem ? "Item updated successfully" : "Item added successfully",
       );
-
-      /* ---------- STEP 4: CLEANUP ---------- */
-      onSaved(itemId!); // 🔥 notify parent
       onClose();
+      onSaved();
       resetForm();
-      setErrors({}); // 👈 clear errors on success
+      setErrors({});
     } catch (err) {
       const error = err as FetchBaseQueryError;
-      if (error.status === 413) {
-        toast.error("Image size should be less than 2 MB");
-        return;
-      }
       if (error.status === 409) {
-        setErrors((prev) => ({
-          ...prev,
-          itemName: "Name already exists.",
-        }));
+        if (editItem) {
+          toast.error(
+            "This item was updated elsewhere. Please reopen and try again.",
+          );
+          onClose(); // 🔥 stale dialog close
+        } else {
+          setErrors({ itemName: "Name already exists." });
+        }
         return;
       }
 
       if (error.status === 412) {
-        setConcurrencyError(true); // 🔥 POPUP TRIGGER
+        setConcurrencyError(true);
+        return;
+      }
+
+      if (error.status === 413) {
+        toast.error("Image size should be less than 2 MB");
         return;
       }
 

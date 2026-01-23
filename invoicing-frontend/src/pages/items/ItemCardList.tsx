@@ -16,7 +16,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 interface Props {
   items: Item[];
   onEdit: (item: Item) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
 }
 
 export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
@@ -30,7 +30,7 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
           : undefined;
 
         return (
-          <Card key={item._id} variant="outlined">
+          <Card key={item.itemID} variant="outlined">
             <CardContent>
               <Box display="flex" gap={2}>
                 {/* 🖼 Picture */}
@@ -61,7 +61,7 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
                     mt={1}
                   >
                     <Typography>
-                      ₹{item.saleRate.toFixed(2)}
+                      ₹{item.salesRate.toFixed(2)}
                     </Typography>
                     <Typography color="text.secondary">
                       {item.discountPct.toFixed(2)}%
@@ -76,7 +76,7 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
                   </IconButton>
                   <IconButton
                     color="error"
-                    onClick={() => onDelete(item._id)}
+                    onClick={() => onDelete(item.itemID)}
                   >
                     <DeleteIcon />
                   </IconButton>
