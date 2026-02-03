@@ -17,16 +17,23 @@ export const signupApi = async (data: SignupFormValues) => {
   formData.append("Industry", data.industry ?? "");
   formData.append("CurrencySymbol", data.currencySymbol);
 
-  if (data.logo) {
-    formData.append("logo", data.logo); // File
-  }
+  if (data.logo instanceof File) {
+  const cleanFile = new File(
+    [data.logo],
+    data.logo.name.replace(/\s+/g, "_"),
+    { type: data.logo.type }
+  );
+
+  formData.append("Logo", cleanFile);
+}
+
 
   
   
  
 
   const res = await axiosInstance.post(
-    `${import.meta.env.VITE_API_BASE_URL}/Auth/Signup`,
+    "/Auth/Signup",
     formData,
    
   );
@@ -34,9 +41,9 @@ export const signupApi = async (data: SignupFormValues) => {
   return res.data;
 };
 
-export const getCompanyLogoApi = async( userId: string) => {
+export const getCompanyLogoApi = async( companyId: string) => {
   const res = await axiosInstance.get(
-    `${import.meta.env.VITE_API_BASE_URL}/Auth/CompanyLogo/${userId}`,
+    `/Auth/GetCompanyLogoUrl/${companyId}`,
     {
       responseType: "blob", // important for file downloads
     }
@@ -45,9 +52,17 @@ export const getCompanyLogoApi = async( userId: string) => {
   return res.data as { logoUrl: string | null };
 }
 
+export const getCompanyLogoThumbnailApi = async (companyId: string) => {
+  const res = await axiosInstance.get(
+    `/Auth/GetCompanyLogoThumbnailUrl/${companyId}`
+  );
+
+  return res.data; // ye SAS URL string return karega
+};
+
 export const loginApi = async (payload: LoginFormValues) =>{
   const res = await axiosInstance.post(
-    `${import.meta.env.VITE_API_BASE_URL}/Auth/Login`,
+    `/Auth/Login`,
     payload,
   );
 

@@ -29,8 +29,8 @@ export const ItemListPage = () => {
 
   /* ---------------- UI STATE ---------------- */
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editItem, setEditItem] = useState<Item | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(
     ITEM_COLUMNS_CONFIG.filter((c) => c.defaultVisible).map((c) => c.field)
@@ -52,21 +52,26 @@ export const ItemListPage = () => {
 
   /* ---------------- ADD ITEM ---------------- */
   const handleAddItem = () => {
-    setEditItem(null); // add mode
+    setSelectedItemId(null); // add mode
     setDialogOpen(true);
   };
 
   /* ---------------- EDIT ITEM ---------------- */
   const handleEditItem = (item: Item) => {
     console.log("EDIT ITEM", item); // ✅ THIS
-    setEditItem(item); // edit mode
+    console.log("EDIT CLICK ITEM", {
+    itemID: item.itemID,
+    createdOn: item.createdOn,
+    updatedOn: item.updatedOn,
+  });
+    setSelectedItemId(item.itemID);
     setDialogOpen(true);
   };
 
   /* ---------------- CLOSE DIALOG ---------------- */
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    setEditItem(null);
+    setSelectedItemId(null);
   };
 
   /* ---------------- DELETE ITEM ---------------- */
@@ -81,7 +86,7 @@ export const ItemListPage = () => {
       // 🔥 RTK Query auto-refetches list
     } catch (err) {
       console.log(err);
-      toast.error("Failed to delete item");
+      toast.error("Failed to delete item, Deleting record exists in invoices.");
     } finally {
       setIsDeleting(false);
     }
@@ -190,13 +195,9 @@ export const ItemListPage = () => {
       <ItemDialog
         open={dialogOpen}
         fullScreen={isMobile}
-        editItem={editItem}
+        itemId={selectedItemId}   // 🔥 PASS ID ONLY
         onClose={handleCloseDialog}
         onSaved={() => {
-          // 🔥 No manual refresh needed
-          // RTK Query list refetch ho jaati hai
-          setDialogOpen(false);
-          setEditItem(null);
           refetch();
         }}
       />

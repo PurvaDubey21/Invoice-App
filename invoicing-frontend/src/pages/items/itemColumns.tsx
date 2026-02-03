@@ -1,90 +1,78 @@
-import type { GridColDef} from "@mui/x-data-grid";
-import { IconButton, Avatar } from "@mui/material";
+import type { GridColDef } from "@mui/x-data-grid";
+import { IconButton} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Item } from "../../types/itemTypes";
-import { Tooltip } from "@mui/material";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+import { Tooltip, Typography } from "@mui/material";
+import ThumbnailCell from "./ThumbnailCell";
 
 export const getItemColumns = (
   onEditItem: (item: Item) => void,
-  onDeletItem: (item: number) => void
+  onDeletItem: (item: number) => void,
 ): GridColDef<Item>[] => [
   {
-  field: "pictureUrl", // 👈 MUST match backend field
-  headerName: "Picture",
-  width: 100,
-  sortable: false,
-  filterable: false,
-  hideable: false,
-  renderCell: (params) => {
-     const imageUrl = params.row.thumbnailUrl
-      ? `${BASE_URL}${params.row.thumbnailUrl}`
-      : params.row.pictureUrl
-      ? `${BASE_URL}${params.row.pictureUrl}`
-      : undefined;
-
-    return (
+    field: "pictureUrl", // 👈 MUST match backend field
+    headerName: "Picture",
+    sortable: false,
+    width: 100,
+    filterable: false,
+    hideable: false,
+    renderCell: (params) => {
+       return <ThumbnailCell
+       itemID={params.row.itemID}
       
-      <Avatar
-        variant="rounded"
-        src={imageUrl ?? undefined}
-        alt="item"
-        sx={{
-          width: 55,
-          height: 55,
-          bgcolor: "#f0f0f0",
-         
-        }}
-      />
-    );
+        />;
+    },
   },
-},
 
   {
     field: "itemName",
     headerName: "Item Name",
     flex: 1,
     hideable: true,
-    renderCell: (p) => <strong>{p.value}</strong>,
+    renderCell: (p) => (
+    <Typography
+      sx={{
+        color: "#1f2937", // 👈 change color here
+        fontWeight: 500,
+      }}
+    >
+      {p.value}
+    </Typography>
+  ),
   },
   {
     field: "description",
     headerName: "Description",
-    flex: 2,
+    flex: 1,
     hideable: true,
     renderCell: (p) => {
-  const text = p.value ?? "";
+      const text = p.value ?? "";
 
-  const truncated =
-    text.length > 50 ? `${text.slice(0, 50)}…` : text;
+      const truncated = text.length > 50 ? `${text.slice(0, 50)}…` : text;
 
-  return (
-    <Tooltip title={text} arrow disableHoverListener={text.length <= 50}>
-      <span>{truncated}</span>
-    </Tooltip>
-  );
-},
-     
+      return (
+        <Tooltip title={text} arrow disableHoverListener={text.length <= 50}>
+          <span>{truncated}</span>
+        </Tooltip>
+      );
+    },
   },
   {
     field: "salesRate",
     headerName: "Sale Rate",
     type: "number",
     hideable: true,
-    align: "right",
-    width: 120,
-    renderCell: (params) =>
-      `₹${Number(params.row.salesRate ?? 0).toFixed(2)}`,
+    flex: 1,
+    renderCell: (params) => `₹${Number(params.row.salesRate ?? 0).toFixed(2)}`,
   },
   {
     field: "discountPct",
     headerName: "Discount %",
     type: "number",
-    align: "right",
-    width: 120,
+
     hideable: true,
+    flex: 1,
     renderCell: (params) =>
       `${Number(params.row.discountPct ?? 0).toFixed(2)}%`,
   },
@@ -93,18 +81,24 @@ export const getItemColumns = (
     headerName: "Actions",
     sortable: false,
     hideable: false,
-    width: 100,
-    
+
+    align: "right", // cell content
+    headerAlign: "right", // header text
+
     renderCell: (params) => (
       <>
-        <IconButton size="small"
-        onClick={() => onEditItem(params.row)} // 🔥 YAHAN APPLY
+        <IconButton
+          size="small"
+          onClick={() => onEditItem(params.row)} // 🔥 YAHAN APPLY
         >
-          <EditIcon fontSize="small" />
+          <EditIcon />
         </IconButton>
-        <IconButton size="small" color="error"
-          onClick={()=> onDeletItem(params.row.itemID)}>
-          <DeleteIcon fontSize="small" />
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => onDeletItem(params.row.itemID)}
+        >
+          <DeleteIcon />
         </IconButton>
       </>
     ),

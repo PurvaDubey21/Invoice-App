@@ -110,6 +110,7 @@ const LoginPage = () => {
           {error && <Alert severity="error">{error}</Alert>}
           <Typography sx={{ color: "#525355" }}>
             Email Address *
+          </Typography>
             <TextField
               label="Email Address "
               name="login_email"
@@ -120,11 +121,12 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               
             />
-          </Typography>
+          
 
           <Typography sx={{ color: "#525355" }}>
             Password *
-            <TextField
+             </Typography>
+          <TextField
               label="Password "
               name="login_password"
               autoComplete="new-password" // 🔥 KEY LINE
@@ -146,7 +148,7 @@ const LoginPage = () => {
                 ),
               }}
             />
-          </Typography>
+         
 
           <FormControlLabel
             control={

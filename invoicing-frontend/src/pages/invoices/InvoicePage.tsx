@@ -5,30 +5,221 @@ import {
   useGetTopItemsQuery,
   useDeleteInvoiceMutation,
 } from "../../services/invoiceApi";
-
+import { useMemo, useState } from "react";
 import { PageHeader } from "../../components/common/PageHeader";
 import { ActionBar } from "../../components/common/ActionBar";
 import { StatCard } from "../../components/common/statCard";
 import { InvoiceTable } from "./InvoiceTable";
 import { InvoiceTrendChart } from "./InvoiceTrendChart";
 import { InvoiceTopItemsChart } from "./InvoiceTopItemsChart";
-
+import { ConfirmDeleteDialog } from "../../components/common/ConfirmDeleteDialog";
 import { Box, Stack } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { ALL_COLUMNS } from "./invoiceColumns.config";
+import type { InvoiceColumnKey } from "./invoiceColumns.config";
+import { toast } from "react-toastify";
 
 export const InvoicePage = () => {
-  const range = { from: "2025-09-01", to: "2025-09-30" };
+ 
+  const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [period, setPeriod] = useState("month");
+ 
+
+  const [range, setRange] = useState(() => {
+    const today = new Date();
+    const from = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      
+
+    return {
+      from: from.toISOString().replace("Z", ""),
+      to: today.toISOString().replace("Z", ""),
+    };
+  });
+
+  const [selectedRange, setSelectedRange] = useState<{
+  from: string;
+  to: string;
+} | null>(null);
+
 
   const { data: list = [], isLoading } = useGetInvoiceListQuery(range);
-  const { data: metrics } = useGetInvoiceMetricsQuery(range);
-  const { data: trend = [] } = useGetInvoiceTrend12mQuery();
-  const { data: topItems = [] } = useGetTopItemsQuery(range);
+  const { data: metrics } = useGetInvoiceMetricsQuery({
+  from: range.from,
+  to: range.to,
+});
+
+  const { data: trend = [] } = useGetInvoiceTrend12mQuery({
+    asOf: range.to,
+  });
+
+  const { data: topItems = [] } = useGetTopItemsQuery({
+    topN: 5,
+  });
+
+  const navigate = useNavigate();
+  const [searchText, setSearchText] = useState("");
 
   const [deleteInvoice] = useDeleteInvoiceMutation();
 
-  return (
-    <>
-      <PageHeader title="Invoices" value="month" onChange={() => {}} />
+  const filteredList = useMemo(() => {
+    if (!searchText.trim()) return list;
 
+    const q = searchText.trim().toLowerCase();
+
+    return list.filter((inv) => {
+      const invoiceNoMatch = String(inv.invoiceNo).includes(q);
+      const customerMatch =
+        inv.customerName && inv.customerName.toLowerCase().includes(q);
+
+      return invoiceNoMatch || customerMatch;
+    });
+  }, [list, searchText]);
+
+  const [visibleColumns, setVisibleColumns] = useState<InvoiceColumnKey[]>(
+    ALL_COLUMNS.map((c) => c.key),
+  );
+
+  const handleExport = () => {
+    const headers = ["Invoice No", "Customer", "Date", "Amount"];
+
+    const rows = filteredList.map((inv) => [
+      inv.invoiceNo,
+      inv.customerName,
+      inv.invoiceDate,
+      inv.taxAmount,
+    ]);
+
+    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "invoices.csv";
+    a.click();
+  };
+
+  const handleToggleColumn = (key: InvoiceColumnKey) => {
+    setVisibleColumns((prev) =>
+      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key],
+    );
+  };
+  const calculateRange = (period: string) => {
+    const today = new Date();
+    let from: Date;
+    let to: Date = today;
+
+    switch (period) {
+      case "today":
+        from = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          0,
+          0,
+          0,
+        );
+        to = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59,
+        );
+        break;
+
+      case "month":
+        from = new Date(today.getFullYear(), today.getMonth(), 1);
+        to = today;
+        break;
+
+      case "last-month":
+        from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        to = new Date(today.getFullYear(), today.getMonth(), 0);
+        break;
+
+      case "12m":
+        from = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+        to = today;
+        break;
+
+      default:
+        from = new Date(today.getFullYear(), today.getMonth(), 1);
+        to = today;
+    }
+
+    return {
+      from: from.toISOString().replace("Z", ""),
+      to: to.toISOString().replace("Z", ""),
+    };
+  };
+  
+  const handlePeriodChange = ({
+  period,
+  from,
+  to,
+}: {
+  period: string;
+  from?: string;
+  to?: string;
+}) => {
+  setPeriod(period);
+
+  // ✅ Custom range
+  if (period === "custom" && from && to) {
+    setRange({
+      from: `${from}T00:00:00`,
+      to: `${to}T23:59:59`,
+    });
+
+    // 🔥 store for UI display
+    setSelectedRange({ from, to });
+    return;
+  }
+
+  // ✅ Non-custom period
+  const newRange = calculateRange(period);
+  setRange(newRange);
+
+  // clear custom display when not custom
+  setSelectedRange(null);
+};
+ const handleDeleteConfirm = async () => {
+    if (!deleteInvoiceId) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteInvoice(deleteInvoiceId).unwrap();
+      toast.success("Invoice deleted successfully"); // 🔥 SUCCESS TOAST
+      setDeleteInvoiceId(null);
+      // 🔥 RTK Query auto-refetches list
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to delete invoice");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  // 🔥🔥🔥 EXACT DEBUG LOGS 🔥🔥🔥
+  console.log("📅 PERIOD:", period);
+  console.log("📅 RANGE SENT TO API:", range);
+
+  console.log("📊 METRICS RESPONSE:", metrics);
+
+  return (
+    
+    <>
+    
+      <PageHeader
+        title="Invoices"
+        value={period}
+         selectedRange={selectedRange}
+        onChange={handlePeriodChange}
+      />
       <Box
         sx={{
           backgroundColor: "#f5f6f7",
@@ -37,22 +228,22 @@ export const InvoicePage = () => {
         }}
       >
         {/* TOP CARDS */}
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          mb={2}
-        >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
           <Box flex={1}>
             <StatCard
               title="Invoices"
-              value={metrics?.invoiceCount ?? 0}
+              value={metrics ? metrics.invoiceCount : "-"}
             />
           </Box>
 
           <Box flex={1}>
             <StatCard
               title="Total Amount"
-              value={`₹${metrics?.totalAmount ?? 0}`}
+              value={
+                metrics
+                  ? `₹${metrics.totalAmount.toLocaleString("en-IN")}`
+                  : "-"
+              }
             />
           </Box>
 
@@ -70,14 +261,34 @@ export const InvoicePage = () => {
         </Stack>
 
         {/* ACTION BAR */}
-        <ActionBar />
+        <ActionBar
+          onCreateInvoice={() => navigate("/invoices/editor")}
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          handelExport={handleExport}
+          columns={ALL_COLUMNS}
+          visibleColumns={visibleColumns}
+          onToggleColumn={handleToggleColumn}
+        />
 
         {/* TABLE */}
         <InvoiceTable
-          rows={list}
+          rows={filteredList}
+          visibleColumns={visibleColumns}
           loading={isLoading}
-          onDelete={(id) => deleteInvoice(id)}
+          onEdit={(id) => navigate(`/invoices/editor?id=${id}`)}
+          onDelete={(id) => setDeleteInvoiceId(id)}
         />
+
+          {/* ---------- DELETE CONFIRM ---------- */}
+              <ConfirmDeleteDialog
+                open={!!deleteInvoiceId}
+                title="Delete Invoice"
+                message="Are you sure you want to delete this invoice?"
+                loading={isDeleting}
+                onCancel={() => setDeleteInvoiceId(null)}
+                onConfirm={handleDeleteConfirm}
+            />
       </Box>
     </>
   );

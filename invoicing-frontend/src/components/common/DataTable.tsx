@@ -8,6 +8,7 @@ interface DataTableProps<T> {
   height?: number;
   getRowId: (row: T) => string | number;
   columnVisibilityModel?: Record<string, boolean>;
+  
 }
 
 export const DataTable = <T,>({
@@ -17,6 +18,8 @@ export const DataTable = <T,>({
   height = 450,
   getRowId,
   columnVisibilityModel,
+ 
+
   
 }: DataTableProps<T>) => {
   return (
@@ -51,14 +54,14 @@ export const DataTable = <T,>({
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "#f6f7f8",
             borderBottom: "1px solid #e5e7eb",
+        
           },
 
           /* 🔹 HEADER CELL (PADDING + TEXT) */
           "& .MuiDataGrid-columnHeader": {
             padding: "12px 16px",
             fontSize: 16,
-            fontWeight: 500,
-            color: "#374151",
+            color: "#525355",
             backgroundColor: "#f6f7f8",
           },
 
@@ -69,9 +72,10 @@ export const DataTable = <T,>({
 
           /* 🔹 CELL (ACTUAL CONTENT PADDING) */
           "& .MuiDataGrid-cell": {
-            padding: "12px 16px",
+           display: "flex",
+            alignItems: "center",
             fontSize: 16,
-            color: "#111827",
+            color: "#525355",
             borderBottom: "none",
           },
 

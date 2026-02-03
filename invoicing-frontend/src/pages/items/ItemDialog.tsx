@@ -14,22 +14,25 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { toast } from "react-toastify";
 import ImageIcon from "@mui/icons-material/Image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 import {
   useSaveItemMutation,
+  useGetItemByIdQuery,
   useUploadItemPictureMutation,
+  useGetItemPictureQuery,
   useLazyCheckDuplicateItemNameQuery,
 } from "../../services/itemApiRtk";
-import type { Item, ItemFormErrors, ItemPayload } from "../../types/itemTypes";
+import type { ItemFormErrors, ItemPayload } from "../../types/itemTypes";
 import { validateItemForm } from "../../schemas/item.schema";
 
 interface Props {
   open: boolean;
   fullScreen?: boolean;
   onClose: () => void;
-  editItem?: Item | null;
+  itemId?: number | null;
   onSaved: () => void; // 🔥
 }
 
@@ -37,7 +40,7 @@ export const ItemDialog = ({
   open,
   fullScreen = false,
   onClose,
-  editItem,
+  itemId,
   onSaved,
 }: Props) => {
   /* ---------------- FORM STATE ---------------- */
@@ -51,11 +54,26 @@ export const ItemDialog = ({
   const [concurrencyError, setConcurrencyError] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
 
+  /* 🔥 MOST IMPORTANT */
+  const updatedOnRef = useRef<string | null>(null);
+
+  const { data: editItem, refetch } = useGetItemByIdQuery(String(itemId), {
+    skip: itemId == null,
+    refetchOnMountOrArgChange: true,
+  });
+
+  const { data: pictureUrl } = useGetItemPictureQuery(itemId!, {
+    skip: !itemId,
+  });
+
   /* 🔥 ADD THIS HERE (JUST AFTER STATE) */
-  const previewUrl = file
+ const previewUrl =
+  file
     ? URL.createObjectURL(file)
-    : !removeImage && editItem?.pictureUrl
-      ? `${import.meta.env.VITE_API_BASE_URL}${editItem.pictureUrl}`
+    : itemId && !removeImage && pictureUrl
+      ? typeof pictureUrl === "string"
+        ? pictureUrl
+        : pictureUrl.url
       : undefined;
 
   const [checkDuplicateName, { isFetching: isCheckingName }] =
@@ -72,21 +90,34 @@ export const ItemDialog = ({
     setSaleRate("");
     setDiscountPct("");
     setFile(null);
-    setRemoveImage(false); // 🔥 ADD THIS
+    setRemoveImage(false); // 🔥 ADD THIS2
+    setErrors({});
   };
 
-  const handleDialogEnter = () => {
-    setRemoveImage(false); // 🔥 RESET IMAGE STATE
+  useEffect(() => {
+    if (!open) return;
+
+    // ADD MODE
+    if (!itemId) {
+      resetForm();
+      updatedOnRef.current = null;
+      return;
+    }
+
+    // EDIT MODE – wait for fresh server data
     if (editItem) {
+      console.log("PREFILL FORM FROM editItem", editItem);
+
       setItemName(editItem.itemName);
       setDescription(editItem.description ?? "");
       setSaleRate(String(editItem.salesRate));
       setDiscountPct(String(editItem.discountPct));
-      setFile(null); // 🔥 ensure no stale file
-    } else {
-      resetForm();
+      setFile(null);
+      setRemoveImage(false);
+      // 🔥 FREEZE SERVER VERSION
+      updatedOnRef.current = editItem.updatedOn;
     }
-  };
+  }, [open, itemId, editItem]);
 
   const handleItemNameBlur = async () => {
     const name = itemName.trim();
@@ -114,6 +145,18 @@ export const ItemDialog = ({
 
   /* ---------------- SAVE ---------------- */
   const handleSave = async () => {
+    console.group("🟡 HANDLE SAVE START");
+
+    console.log("FORM VALUES", {
+      itemId,
+      itemName,
+      description,
+      saleRate,
+      discountPct,
+      removeImage,
+    });
+
+    console.log("UPDATEDON REF BEFORE SAVE", updatedOnRef.current);
     const formErrors = validateItemForm({
       itemName,
       description,
@@ -122,17 +165,19 @@ export const ItemDialog = ({
     });
 
     if (Object.keys(formErrors).length > 0) {
+      console.warn("❌ FORM VALIDATION FAILED", formErrors);
       setErrors(formErrors);
+      console.groupEnd();
       return;
     }
 
     try {
       setIsSaving(true);
 
-      let itemId: number | undefined;
+      let savedItemId: number;
 
       /* ================= ADD MODE ================= */
-      if (!editItem) {
+      if (!itemId) {
         const res = await saveItem({
           itemName: itemName.trim(),
           description: description.trim(),
@@ -140,72 +185,110 @@ export const ItemDialog = ({
           discountPct: Number(discountPct),
         }).unwrap();
 
-        console.log("SAVE ITEM RESPONSE (ADD):", res); // ✅ ADD LOG
-        itemId = res.primaryKeyID;
+        console.log("✅ ADD RESPONSE FROM SERVER", res);
+        savedItemId = res.primaryKeyID;
       } else {
         /* ================= EDIT MODE ================= */
+        // 🔥 STEP 1: fetch latest version JUST before save
+        /* ================= EDIT MODE ================= */
+        console.log("🟠 EDIT MODE");
 
+        console.log("EDIT ITEM FROM QUERY", editItem);
+        console.log("UPDATEDON REF USED IN PAYLOAD", updatedOnRef.current);
+        // 🔥 STEP 1: fetch latest version
         const payload: ItemPayload = {
-          itemID: editItem.itemID,
+          itemID: itemId,
           itemName: itemName.trim(),
           description: description.trim(),
           salesRate: Number(saleRate),
           discountPct: Number(discountPct),
-          updatedOnPrev: editItem.updatedOn ?? editItem.createdOn, // ✅ always fresh
+          updatedOnPrev: updatedOnRef.current!,
           removeImage,
         };
 
+        console.log("📤 SAVE PAYLOAD", payload);
+
         const res = await saveItem(payload).unwrap();
-        console.log("SAVE ITEM RESPONSE:", res);
+        console.log("✅ SAVE RESPONSE FROM SERVER", res);
 
-        /* 🔥🔥 YAHI ADD KARNA HAI (MOST IMPORTANT) */
+        console.log(
+          "🔄 UPDATEDON CHANGE",
+          "OLD →",
+          updatedOnRef.current,
+          "NEW →",
+          res.updatedOn,
+        );
 
-        itemId = editItem.itemID;
+        // 🔥 UPDATE LOCAL VERSION AFTER SAVE
+        updatedOnRef.current = res.updatedOn;
+
+        await refetch(); // 🔥 ADD THIS LINE
+        savedItemId = itemId;
       }
-      console.log("FINAL ITEM ID FOR UPLOAD:", itemId);
-      if (typeof itemId !== "number") {
+      console.log("FINAL ITEM ID FOR UPLOAD:", savedItemId);
+      if (typeof savedItemId !== "number") {
+        console.error("❌ INVALID SAVED ITEM ID");
         toast.error("Failed to save item. Please try again.");
+        console.groupEnd();
         return;
       }
       /* ================= IMAGE UPLOAD ================= */
-      if (file && typeof itemId === "number") {
-        await uploadPicture({ id: itemId, file }).unwrap();
+      if (file && typeof savedItemId === "number") {
+        console.log("🖼️ UPLOADING IMAGE");
+        await uploadPicture({ id: savedItemId, file }).unwrap();
+        console.log("✅ IMAGE UPLOADED");
+
+        // 🔥 REFRESH PICTURE
+        setFile(null);
       }
 
       toast.success(
-        editItem ? "Item updated successfully" : "Item added successfully",
+        itemId ? "Item updated successfully" : "Item added successfully",
       );
+      console.log("🟢 SAVE FLOW SUCCESS");
       onClose();
       onSaved();
       resetForm();
       setErrors({});
     } catch (err) {
       const error = err as FetchBaseQueryError;
-      if (error.status === 409) {
+
+      console.error("🔥 SAVE FAILED", error);
+
+      console.log("ERROR STATUS", error.status);
+      console.log("UPDATEDON REF AT ERROR TIME", updatedOnRef.current);
+      console.log("EDIT ITEM AT ERROR TIME", editItem);
+      if (error.status === 409 && itemId) {
+        console.warn("♻️ Auto refetch and retry");
         if (editItem) {
-          toast.error(
-            "This item was updated elsewhere. Please reopen and try again.",
-          );
+          toast.error("Item updated by another user. Reloading...");
+          await refetch(); // 🔥 reload latest
           onClose(); // 🔥 stale dialog close
         } else {
           setErrors({ itemName: "Name already exists." });
         }
+        console.groupEnd();
         return;
       }
 
       if (error.status === 412) {
+        console.warn("⚠️ 412 PRECONDITION FAILED");
         setConcurrencyError(true);
+        console.groupEnd();
         return;
       }
 
       if (error.status === 413) {
+        console.warn("⚠️ 413 PAYLOAD TOO LARGE");
         toast.error("Image size should be less than 2 MB");
+        console.groupEnd();
         return;
       }
 
-      console.error(error);
+      console.error("❌ UNKNOWN ERROR", error);
     } finally {
       setIsSaving(false);
+      console.groupEnd();
     }
   };
 
@@ -220,9 +303,6 @@ export const ItemDialog = ({
       fullScreen={fullScreen}
       maxWidth="md"
       fullWidth
-      TransitionProps={{
-        onEnter: handleDialogEnter,
-      }}
       /* ❌ Esc key disable */
       disableEscapeKeyDown
       /* ❌ Backdrop click disable */
@@ -233,7 +313,7 @@ export const ItemDialog = ({
     >
       {/* ---------------- TITLE ---------------- */}
       <DialogTitle sx={{ fontWeight: 600, color: "#525355" }}>
-        {editItem ? "Edit Item" : "New Item"}
+        {itemId ? "Edit Item" : "New Item"}
         <IconButton
           onClick={onClose}
           sx={{ position: "absolute", right: 8, top: 8 }}
@@ -264,7 +344,7 @@ export const ItemDialog = ({
               </Avatar>
 
               {/* 🔥 REMOVE IMAGE BUTTON */}
-              {(file || (editItem?.pictureUrl && !removeImage)) && (
+              {(file ||(itemId &&pictureUrl && !removeImage)) && (
                 <IconButton
                   size="small"
                   onClick={handleRemoveImage}
@@ -395,7 +475,7 @@ export const ItemDialog = ({
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || (itemId !== null && !editItem)}
           sx={{
             color: "#ffffff",
             bgcolor: "#525355",

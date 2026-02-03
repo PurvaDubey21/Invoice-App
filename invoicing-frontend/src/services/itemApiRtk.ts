@@ -20,7 +20,7 @@ export const itemApi = baseApi.injectEndpoints({
 
     /* ================= LOOKUP LIST ================= */
     getItemLookupList: builder.query<
-      Pick<Item, "itemID" | "itemName" | "salesRate" | "discountPct">[],
+      Pick<Item, "itemID" | "itemName">[],
       void
     >({
       query: () => "/Item/GetLookupList",
@@ -29,7 +29,7 @@ export const itemApi = baseApi.injectEndpoints({
 
    /* ================= SAVE (INSERT + UPDATE) ================= */
 saveItem: builder.mutation<
-  { itemID: number; updatedOn: string },
+  { primaryKeyID: number; updatedOn: string },
    ItemPayload
 >({
   query: (body) => ({
@@ -84,12 +84,12 @@ saveItem: builder.mutation<
     }),
 
     /* ================= GET PICTURE ================= */
-    getItemPicture: builder.query<{ url: string }, string>({
+    getItemPicture: builder.query<{ url: string }, number>({
       query: (id) => `/Item/Picture/${id}`,   // ✅ EXACT MATCH
     }),
 
     /* ================= GET THUMBNAIL ================= */
-    getItemThumbnail: builder.query<{ url: string }, string>({
+    getItemThumbnail: builder.query< string, number>({
       query: (id) => `/Item/PictureThumbnail/${id}`, // ✅ EXACT MATCH
     }),
   }),
@@ -98,6 +98,7 @@ saveItem: builder.mutation<
 export const {
   useGetItemListQuery,
   useGetItemByIdQuery,
+  useLazyGetItemByIdQuery,
   useGetItemLookupListQuery,
   useSaveItemMutation,
   useDeleteItemMutation,

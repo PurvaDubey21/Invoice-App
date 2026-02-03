@@ -4,9 +4,10 @@ import {
   Card,
   CardContent,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
+
+import  DecimalField  from "../common/DecimalField";
 
 interface Props {
   subTotal: number;
@@ -20,11 +21,15 @@ interface Props {
 ---------------------------------- */
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
+
+
+
 const formatMoney = (v: number) =>
-  v.toLocaleString("en-IN", {
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  }).format(v);
 
 const InvoiceTotals: React.FC<Props> = ({
   subTotal,
@@ -32,29 +37,40 @@ const InvoiceTotals: React.FC<Props> = ({
   taxAmt,
   onChange,
 }) => {
-  const handleTaxPctChange = (val: number) => {
-    if (subTotal === 0) {
-      onChange(0, 0);
-      return;
-    }
+ const [taxPctError, setTaxPctError] = React.useState<string | null>(null);
+ const [taxAmtError, setTaxAmtError] = React.useState<string | null>(null);
+ const handleTaxPctChange = (val: number) => {
+  if (val < 0 || val > 100) {
+    setTaxPctError("Tax % must be between 0 and 100.");
+    return;
+  }
+  setTaxPctError(null);
 
-    const pct = Math.min(100, Math.max(0, val));
-    const amt = round2((subTotal * pct) / 100);
+  if (subTotal === 0) {
+    onChange(0, 0);
+    return;
+  }
 
-    onChange(pct, amt);
-  };
+  const amt = round2((subTotal * val) / 100);
+  onChange(val, amt);
+};
 
-  const handleTaxAmtChange = (val: number) => {
-    if (subTotal === 0) {
-      onChange(0, 0);
-      return;
-    }
+ const handleTaxAmtChange = (val: number) => {
+  if (val < 0) {
+    setTaxAmtError("Tax amount must be ≥ 0.");
+    return;
+  }
+  setTaxAmtError(null);
 
-    const amt = Math.max(0, val);
-    const pct = round2((amt * 100) / subTotal);
+  if (subTotal === 0) {
+    onChange(0, 0);
+    return;
+  }
 
-    onChange(pct, amt);
-  };
+  const pct = round2((val * 100) / subTotal);
+  onChange(pct, val);
+};
+
 
   const invoiceAmount = round2(subTotal + taxAmt);
 
@@ -68,38 +84,51 @@ const InvoiceTotals: React.FC<Props> = ({
         <Stack alignItems="flex-end">
           <Box width={{ xs: "100%", md: 340 }}>
             <Stack direction="row" justifyContent="space-between" mb={1}>
-              <Typography>Sub Total</Typography>
-              <Typography>₹ {formatMoney(subTotal)}</Typography>
+              <Typography color="text.secondary" fontWeight={600}>Sub Total</Typography>
+              <Typography color="text.secondary" fontWeight={600} >{formatMoney(subTotal)}</Typography>
             </Stack>
 
             <Box mb={1}>
               <Stack direction="row" spacing={1}>
-                <TextField
+                <DecimalField
                   size="small"
                   label="Tax %"
-                  type="number"
                   fullWidth
-                  value={taxPct === 0 ? "" : taxPct}
-                  inputProps={{ min: 0, max: 100 }}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    onChange(val === "" ? 0 : +val, taxAmt);
-                  }}
-                  onBlur={(e) => handleTaxPctChange(+e.target.value || 0)}
-                />
+                  value={taxPct}
+                  error={!!taxPctError}
+                  helperText={taxPctError}
+                  onValueChange={(val) => {
+                    setTaxPctError(null);
 
-                <TextField
+                    if (subTotal === 0) {
+                      onChange(0, 0);
+                      return;
+                    }
+
+                    const amt = round2((subTotal * val) / 100);
+                    onChange(val, amt);
+                  }}
+                  onBlur={() => handleTaxPctChange(taxPct)}
+                />
+                <DecimalField
                   size="small"
                   label="Tax Amount"
-                  type="number"
                   fullWidth
-                  value={taxAmt === 0 ? "" : taxAmt}
-                  inputProps={{ min: 0 }}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    onChange(taxPct, val === "" ? 0 : +val);
+                  value={taxAmt}
+                  error={!!taxAmtError}
+                  helperText={taxAmtError}
+                  onValueChange={(val) => {
+                    setTaxAmtError(null);
+
+                    if (subTotal === 0) {
+                      onChange(0, 0);
+                      return;
+                    }
+
+                    const pct = round2((val * 100) / subTotal);
+                    onChange(pct, val);
                   }}
-                  onBlur={(e) => handleTaxAmtChange(+e.target.value || 0)}
+                  onBlur={() => handleTaxAmtChange(taxAmt)}
                 />
               </Stack>
             </Box>
@@ -114,7 +143,7 @@ const InvoiceTotals: React.FC<Props> = ({
             >
               <Typography fontWeight={600}>Invoice Amount</Typography>
               <Typography fontSize={20} fontWeight={700}>
-                ₹ {formatMoney(invoiceAmount)}
+               {formatMoney(invoiceAmount)}
               </Typography>
             </Box>
             {/* Zero hint */}

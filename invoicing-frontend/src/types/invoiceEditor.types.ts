@@ -8,12 +8,13 @@
    - invoiceApi.ts
 ========================================================= */
 
+
 /* ----------------------------------
    Invoice Header (Editor State)
 ---------------------------------- */
 export interface InvoiceHeader {
   invoiceID?: number;          // present in edit mode
-  invoiceNo: number | "";
+  invoiceNo?: number | "";
   invoiceDate: string;         // yyyy-mm-dd
   customerName: string;
   address: string;
@@ -31,12 +32,14 @@ export interface InvoiceHeader {
 ---------------------------------- */
 export interface InvoiceLine {
   rowId: string;               // frontend only
-  itemID?: string;             // mandatory before save
+  itemID: number | null;             // mandatory before save
   description: string;
   qty: number;                 // >= 0
   rate: number;                // >= 0
   discountPct: number;         // 0–100
-  amount: number;              // calculated (RO)
+  amount: number;  
+  isRateEdited?: boolean;
+  isDiscountEdited?: boolean;            // calculated (RO)
 }
 
 /* ----------------------------------
@@ -61,6 +64,7 @@ export interface InvoiceTotals {
    Validation Errors (Phase 5)
 ---------------------------------- */
 export interface InvoiceHeaderErrors {
+   invoiceNo?: string;
   invoiceDate?: string;
   customerName?: string;
   notes?: string;
@@ -78,22 +82,22 @@ export interface InvoiceLineErrors {
 ---------------------------------- */
 export interface SaveInvoicePayload {
   invoiceID?: number;
-  invoiceNo: number | "";
+  invoiceNo?: number;
   invoiceDate: string;
   customerName: string;
-  address: string;
-  city: string;
-  notes: string;
+  address?: string | null;
+  city?: string | null;
+  notes?: string | null;
 
-  taxPct: number;
-  taxAmt: number;
+  taxPercentage: number;
 
   updatedOnPrev?: string | null;
 
   lines: {
-    itemID?: string;
+    rowNo: number;
+    itemID?: number;
     description: string;
-    qty: number;
+    quantity: number;
     rate: number;
     discountPct: number;
   }[];
@@ -111,18 +115,19 @@ export interface InvoiceApiResponse {
   city?: string;
   notes?: string;
 
-  taxPct: number;
-  taxAmt: number;
+  taxPercentage: number;   // ✅ backend field
+  taxAmount: number;       // ✅ backend field
+
 
   updatedOn: string;
 
   lines: {
-    itemID: string;
+    rowNo: number;
+    itemID: number;
     description?: string;
-    qty: number;
+    quantity: number;
     rate: number;
     discountPct: number;
-    amount: number;
   }[];
 }
 
@@ -131,11 +136,8 @@ export interface InvoiceApiResponse {
    (Aligned with Item/GetLookupList)
 ---------------------------------- */
 export interface ItemLookup {
-  _id: string;
-  itemName: string;
-  saleRate: number;
-  discountPct: number;
-  description?: string;
+  itemID: number,
+  itemName: string
 }
 
 

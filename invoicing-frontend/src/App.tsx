@@ -8,6 +8,7 @@ import  InvoiceEditor  from "./pages/invoices/InvoiceEditor";
 import { ItemListPage } from "./pages/items/ItemListPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
+import { AppLayout } from "./components/layout/AppLayout";
 
 function App() {
   return (
@@ -21,15 +22,16 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>
-
+     
       {/* PROTECTED ROUTES (login required) */}
       <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
         <Route path="/invoices" element={<InvoicePage />} />
          <Route path="/invoices/editor" element={<InvoiceEditor />} />
+
          <Route path="/items" element={<ItemListPage />} /> 
 
-        {/* future */}
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        </Route>
       </Route>
 
       {/* FALLBACK */}

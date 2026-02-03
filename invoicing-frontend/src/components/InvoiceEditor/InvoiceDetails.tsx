@@ -7,23 +7,32 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import type { InvoiceHeader, InvoiceHeaderErrors } from "../../types/invoiceEditor.types";
-
+import type {
+  InvoiceHeader,
+  InvoiceHeaderErrors,
+} from "../../types/invoiceEditor.types";
 
 interface Props {
   header: InvoiceHeader;
-  error : InvoiceHeaderErrors;
-  onChange: (field: keyof InvoiceHeader, value: InvoiceHeader[keyof InvoiceHeader]) => void;
+  error: InvoiceHeaderErrors;
+  isEditMode: boolean;
+  onChange: (
+    field: keyof InvoiceHeader,
+    value: InvoiceHeader[keyof InvoiceHeader],
+  ) => void;
 }
 
-const InvoiceDetails: React.FC<Props> = ({ 
-  header,
-  error = {}, 
-  onChange }) => {
+const InvoiceDetails: React.FC<Props> = ({ header, error = {}, isEditMode, onChange }) => {
   return (
-    <Card sx={{ mb: 1}}>
+    <Card sx={{ mb: 1 }}>
       <CardContent>
-        <Typography variant="subtitle1" mb={1}>
+        <Typography 
+        variant="subtitle1" 
+        mb={1} 
+        color="text.secondary" 
+        fontWeight={600} 
+        fontSize={18}
+        >
           Invoice Details
         </Typography>
 
@@ -32,18 +41,18 @@ const InvoiceDetails: React.FC<Props> = ({
           <Box>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
-                label="Invoice No"
+                label="Invoice No "
                 fullWidth
-                value={header.invoiceNo}
-                helperText="Auto next available number"
-                inputProps={{inputMode: "numeric"}}
+                required
+                value={header.invoiceNo ?? ""}
+                disabled={isEditMode} // 🔒 EDIT MODE LOCK
+                error={!!error.invoiceNo}
+                helperText={error.invoiceNo || "Must be unique"}
+                inputProps={{ inputMode: "numeric" }}
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (val === "" || /^[0-9]+$/.test(val)) {
-                    onChange(
-                      "invoiceNo",
-                      val === "" ? "" : Number(val)
-                    );
+                  if (val === "" || /^[0-9]+$/.test(val) && Number(val) > 0) {
+                    onChange("invoiceNo", val === "" ? undefined : Number(val));
                   }
                 }}
               />
@@ -56,9 +65,7 @@ const InvoiceDetails: React.FC<Props> = ({
                 value={header.invoiceDate}
                 error={!!error.invoiceDate}
                 helperText={error.invoiceDate}
-                onChange={(e) =>
-                  onChange("invoiceDate", e.target.value)
-                }
+                onChange={(e) => onChange("invoiceDate", e.target.value)}
               />
             </Stack>
           </Box>
@@ -73,29 +80,17 @@ const InvoiceDetails: React.FC<Props> = ({
                 error={!!error.customerName}
                 helperText={error.customerName}
                 onChange={(e) =>
-                  onChange("customerName", e.target.value.slice(0,50))
+                  onChange("customerName", e.target.value.slice(0, 50))
                 }
-                onBlur={(e) =>
-                  onChange(
-                    "customerName",
-                    e.target.value.trim()
-                  )
-                }
+                onBlur={(e) => onChange("customerName", e.target.value.trim())}
               />
 
               <TextField
                 label="City"
                 fullWidth
                 value={header.city}
-                onChange={(e) =>
-                  onChange("city", e.target.value.slice(0,50))
-                }
-                 onBlur={(e) =>
-                  onChange(
-                    "city",
-                    e.target.value.trim()
-                  )
-                }
+                onChange={(e) => onChange("city", e.target.value.slice(0, 50))}
+                onBlur={(e) => onChange("city", e.target.value.trim())}
               />
             </Stack>
           </Box>
@@ -121,7 +116,7 @@ const InvoiceDetails: React.FC<Props> = ({
                 minRows={2}
                 value={header.notes}
                 error={!!error.notes}
-                helperText={error.notes ?? `${header.notes.length}/500`}
+                helperText={error.notes ?? `${header.notes?.length ?? 0}/500`}
                 onChange={(e) =>
                   onChange("notes", e.target.value.slice(0, 500))
                 }

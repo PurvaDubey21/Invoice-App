@@ -5,10 +5,10 @@ import type {
   InvoiceTrend,
   TopItem,
 } from "../types/invoice.types";
-import type { 
-  SaveInvoicePayload, 
-  InvoiceApiResponse, 
- SaveInvoiceResponse 
+import type {
+  SaveInvoicePayload,
+  InvoiceApiResponse,
+  SaveInvoiceResponse,
 } from "../types/invoiceEditor.types";
 
 export const invoiceApi = baseApi.injectEndpoints({
@@ -16,7 +16,7 @@ export const invoiceApi = baseApi.injectEndpoints({
     // ✅ Invoice List
     getInvoiceList: builder.query<Invoice[], { from?: string; to?: string }>({
       query: (range) => ({
-        url: "/invoice/getlist",
+        url: "/Invoice/GetList",
         params: range,
       }),
       providesTags: ["Invoice"],
@@ -27,59 +27,63 @@ export const invoiceApi = baseApi.injectEndpoints({
       InvoiceMetrics,
       { from: string; to: string }
     >({
-      query: (range) => ({
-        url: "/invoice/getmetrics",
-        params: range,
+      query: ({from, to}) => ({
+        url: "/Invoice/GetMetrices",
+        params: { from, to },
+      }),
+      // 🔥 THIS IS THE KEY FIX
+  transformResponse: (response: InvoiceMetrics[]) => response[0],
+    }),
+
+    // ✅ 12 Month Invoice Trend (as of date)
+    getInvoiceTrend12m: builder.query<InvoiceTrend[], { asOf: string }>({
+      query: ({ asOf }) => ({
+        url: "/Invoice/GetTrend12m",
+        params: { asOf },
       }),
     }),
 
-    // ✅ 12 Month Trend
-    getInvoiceTrend12m: builder.query<InvoiceTrend[], void>({
-      query: () => "/invoice/gettrend12m",
-    }),
-
-    // ✅ Top Items
-    getTopItems: builder.query<TopItem[], { from: string; to: string }>({
-      query: (range) => ({
-        url: "/invoice/topitems",
-        params: range,
+    // ✅ Top Items (Dashboard)
+    getTopItems: builder.query<TopItem[], { topN: number }>({
+      query: ({ topN }) => ({
+        url: "/Invoice/TopItems",
+        params: { topN },
       }),
     }),
 
-    // ✅ Delete Invoice
     deleteInvoice: builder.mutation<void, number>({
       query: (invoiceID) => ({
-        url: "/invoice/delete",
-        method: "POST",
-        body: { invoiceID },
+        url: `/Invoice/${invoiceID}`,
+        method: "DELETE",
       }),
       invalidatesTags: ["Invoice"],
     }),
-    // ✅ Get single invoice (Editor - Edit mode)
-    getInvoiceById: builder.query< InvoiceApiResponse,
-  { invoiceID: number }
-  >({
-      query: ({ invoiceID }) => ({
-        url: "/invoice/getlist",
-        params: { invoiceID },
+    // ✅ Get single invoice by ID (Editor - Edit mode)
+    getInvoiceById: builder.query<InvoiceApiResponse, number>({
+      query: (invoiceID) => ({
+        url: `/Invoice/${invoiceID}`,
+        method: "GET",
       }),
       providesTags: ["Invoice"],
     }),
 
-    // ✅ Insert / Update Invoice (Editor Save)
-    saveInvoice: builder.mutation<
-     SaveInvoiceResponse,   // ✅ API response
-     SaveInvoicePayload     // ✅ request body
-    >({
+    insertInvoice: builder.mutation<SaveInvoiceResponse, SaveInvoicePayload>({
       query: (payload) => ({
-        url: "/invoice/insertupdate",
+        url: "/Invoice",
         method: "POST",
         body: payload,
       }),
       invalidatesTags: ["Invoice"],
     }),
-    // ✅ Item dropdown for invoice lines
-    
+
+    updateInvoice: builder.mutation<SaveInvoiceResponse, SaveInvoicePayload>({
+      query: (payload) => ({
+        url: "/Invoice",
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["Invoice"],
+    }),
   }),
 
   overrideExisting: false,
@@ -94,6 +98,6 @@ export const {
 
   // 🔥 Invoice Editor hooks
   useGetInvoiceByIdQuery,
-  useSaveInvoiceMutation,
-  
+  useInsertInvoiceMutation,
+  useUpdateInvoiceMutation,
 } = invoiceApi;

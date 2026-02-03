@@ -68,7 +68,7 @@ export const ItemToolbar = ({
           width: 450,
           "& .MuiOutlinedInput-root": {
             borderRadius: "8px",
-            fontSize: 14,
+            fontSize: 18,
           },
         }}
         InputProps={{

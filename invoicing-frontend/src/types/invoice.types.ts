@@ -1,6 +1,6 @@
 export interface Invoice {
   invoiceID: number;
-  invoiceNo: number;
+  invoiceNo: number ;
   invoiceDate: string;
   customerName: string;
   subTotal: number;
