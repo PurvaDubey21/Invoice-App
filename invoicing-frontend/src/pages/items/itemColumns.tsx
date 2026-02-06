@@ -1,5 +1,5 @@
 import type { GridColDef } from "@mui/x-data-grid";
-import { IconButton} from "@mui/material";
+import { IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Item } from "../../types/itemTypes";
@@ -18,10 +18,7 @@ export const getItemColumns = (
     filterable: false,
     hideable: false,
     renderCell: (params) => {
-       return <ThumbnailCell
-       itemID={params.row.itemID}
-      
-        />;
+      return <ThumbnailCell itemID={params.row.itemID} />;
     },
   },
 
@@ -31,51 +28,74 @@ export const getItemColumns = (
     flex: 1,
     hideable: true,
     renderCell: (p) => (
-    <Typography
-      sx={{
-        color: "#1f2937", // 👈 change color here
-        fontWeight: 500,
-      }}
-    >
-      {p.value}
-    </Typography>
-  ),
+      <Typography
+        sx={{
+          color: "#1f2937", // 👈 change color here
+          fontWeight: 500,
+        }}
+      >
+        {p.value}
+      </Typography>
+    ),
   },
   {
-    field: "description",
-    headerName: "Description",
-    flex: 1,
-    hideable: true,
-    renderCell: (p) => {
-      const text = p.value ?? "";
+  field: "description",
+  headerName: "Description",
+  flex: 1,
+  hideable: true,
+  renderCell: (p) => {
+    const raw = p.value ?? "";
+    const text = raw.trim();
 
-      const truncated = text.length > 50 ? `${text.slice(0, 50)}…` : text;
-
+    // 🔥 EMPTY CASE
+    if (!text) {
       return (
-        <Tooltip title={text} arrow disableHoverListener={text.length <= 50}>
-          <span>{truncated}</span>
-        </Tooltip>
+        <span style={{ color: "#9ca3af" }}>
+          No Description
+        </span>
       );
-    },
+    }
+
+    // 🔥 NORMAL CASE
+    const truncated =
+      text.length > 50 ? `${text.slice(0, 50)}…` : text;
+
+    return (
+      <Tooltip
+        title={text}
+        arrow
+        disableHoverListener={text.length <= 50}
+      >
+        <span>{truncated}</span>
+      </Tooltip>
+    );
   },
-  {
+},
+{
     field: "salesRate",
     headerName: "Sale Rate",
     type: "number",
     hideable: true,
     flex: 1,
-    renderCell: (params) => `₹${Number(params.row.salesRate ?? 0).toFixed(2)}`,
+    renderCell: (params) =>
+      `₹${Number(params.row.salesRate ?? 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
   },
   {
     field: "discountPct",
     headerName: "Discount %",
     type: "number",
-
     hideable: true,
     flex: 1,
     renderCell: (params) =>
-      `${Number(params.row.discountPct ?? 0).toFixed(2)}%`,
+      `${Number(params.row.discountPct ?? 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}%`,
   },
+
   {
     field: "actions",
     headerName: "Actions",

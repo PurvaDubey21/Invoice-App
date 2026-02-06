@@ -62,7 +62,12 @@ export const InvoiceMobileCards = ({ rows, onEdit, onDelete }: Props) => {
             </Typography>
 
             <Typography>
-              <b>Tax %:</b> {Number(inv.taxPercentage).toFixed(2)}%
+              <b>Tax %:</b>{" "}
+              {Number(inv.taxPercentage ?? 0).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+              %
             </Typography>
 
             <Typography>
@@ -77,10 +82,7 @@ export const InvoiceMobileCards = ({ rows, onEdit, onDelete }: Props) => {
 
             {/* ACTIONS */}
             <Stack direction="row" justifyContent="flex-end" spacing={1}>
-              <IconButton
-                size="small"
-                onClick={() => onEdit?.(inv.invoiceID)}
-              >
+              <IconButton size="small" onClick={() => onEdit?.(inv.invoiceID)}>
                 <EditIcon />
               </IconButton>
 

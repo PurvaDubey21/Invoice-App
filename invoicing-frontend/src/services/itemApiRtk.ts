@@ -1,5 +1,33 @@
 import { baseApi } from "../api/baseQuery";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type {  Item, ItemPayload } from "../types/itemTypes";
+import { toast } from "react-toastify";
+
+
+const handleItemError = (err: unknown) => {
+  const error = err as { error?: FetchBaseQueryError };
+  const status = error?.error?.status;
+
+  if (status === 409) {
+    toast.error("Record already modified by another user");
+  } 
+  else if (status === 412) {
+    toast.error("Item updated by another user.");
+  } 
+  else if (status === 413) {
+    toast.error("Image size should be less than 2 MB");
+  } 
+  else if (status === 400) {
+    toast.error("Validation error.");
+  } 
+  else if (status === 500) {
+    toast.error("Server error.");
+  }
+  else {
+    toast.error("Something went wrong.");
+  }
+};
+
 
 export const itemApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -38,6 +66,14 @@ saveItem: builder.mutation<
     body,
   }),
   invalidatesTags: ["Item"],
+  async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Item saved successfully");
+    } catch (err) {
+      handleItemError(err);
+    }
+  },
 }),
 
     /* ================= DELETE ================= */
@@ -50,6 +86,15 @@ saveItem: builder.mutation<
         method: "DELETE",
       }),
       invalidatesTags: ["Item"],
+
+      async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Item deleted successfully");
+    } catch (err) {
+      handleItemError(err);
+    }
+  },
     }),
 
     /* ================= DUPLICATE NAME CHECK ================= */
@@ -81,6 +126,14 @@ saveItem: builder.mutation<
         };
       },
       invalidatesTags: ["Item"],
+      async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Image uploaded");
+    } catch (err) {
+      handleItemError(err);
+    }
+  },
     }),
 
     /* ================= GET PICTURE ================= */

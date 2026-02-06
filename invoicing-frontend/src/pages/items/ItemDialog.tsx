@@ -12,12 +12,8 @@ import {
   Stack,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { toast } from "react-toastify";
 import ImageIcon from "@mui/icons-material/Image";
 import { useEffect, useRef, useState } from "react";
-
-import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-
 import {
   useSaveItemMutation,
   useGetItemByIdQuery,
@@ -27,6 +23,7 @@ import {
 } from "../../services/itemApiRtk";
 import type { ItemFormErrors, ItemPayload } from "../../types/itemTypes";
 import { validateItemForm } from "../../schemas/item.schema";
+import type{ FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 interface Props {
   open: boolean;
@@ -105,7 +102,7 @@ export const ItemDialog = ({
 
     // EDIT MODE – wait for fresh server data
     if (editItem) {
-      console.log("PREFILL FORM FROM editItem", editItem);
+
 
       setItemName(editItem.itemName);
       setDescription(editItem.description ?? "");
@@ -119,56 +116,51 @@ export const ItemDialog = ({
   }, [open, itemId, editItem]);
 
   const handleItemNameBlur = async () => {
-    const name = itemName.trim();
-    if (!name) return;
+  const name = itemName.trim();
+  if (!name) return;
 
-    // 🔥 SAME NAME, SAME ITEM → SKIP CHECK
-    if (editItem && name === editItem.itemName) return;
+  if (editItem && name === editItem.itemName) return;
 
-    try {
-      const res = await checkDuplicateName({
-        ItemName: name,
-        ExcludeID: editItem?.itemID, // 👈 edit case skip self
-      }).unwrap();
+  try {
+    await checkDuplicateName({
+      ItemName: name,
+      ExcludeID: itemId ?? undefined,
+    }).unwrap();
 
-      if (res.exists) {
-        setErrors((prev) => ({
-          ...prev,
-          itemName: "Name already exists.",
-        }));
-      }
-    } catch (err) {
-      console.error("Duplicate check failed", err);
+    // unique name
+    setErrors((prev) => ({ ...prev, itemName: undefined }));
+  } 
+  catch (err: unknown) {
+    const error = err as FetchBaseQueryError;
+
+    if (error.status === 409) {
+      setErrors((prev) => ({
+        ...prev,
+        itemName: "Name already exists.",
+      }));
+      return;
     }
-  };
+
+    console.error("Duplicate check failed", err);
+  }
+};
+
 
   /* ---------------- SAVE ---------------- */
   const handleSave = async () => {
-    console.group("🟡 HANDLE SAVE START");
-
-    console.log("FORM VALUES", {
-      itemId,
+    const formErrors =  validateItemForm({
       itemName,
       description,
       saleRate,
       discountPct,
-      removeImage,
-    });
-
-    console.log("UPDATEDON REF BEFORE SAVE", updatedOnRef.current);
-    const formErrors = validateItemForm({
-      itemName,
-      description,
-      saleRate,
-      discountPct,
-    });
+    },
+  );
 
     if (Object.keys(formErrors).length > 0) {
-      console.warn("❌ FORM VALIDATION FAILED", formErrors);
       setErrors(formErrors);
-      console.groupEnd();
       return;
     }
+   
 
     try {
       setIsSaving(true);
@@ -183,18 +175,11 @@ export const ItemDialog = ({
           salesRate: Number(saleRate),
           discountPct: Number(discountPct),
         }).unwrap();
-
-        console.log("✅ ADD RESPONSE FROM SERVER", res);
         savedItemId = res.primaryKeyID;
       } else {
         /* ================= EDIT MODE ================= */
         // 🔥 STEP 1: fetch latest version JUST before save
         /* ================= EDIT MODE ================= */
-        console.log("🟠 EDIT MODE");
-
-        console.log("EDIT ITEM FROM QUERY", editItem);
-        console.log("UPDATEDON REF USED IN PAYLOAD", updatedOnRef.current);
-        // 🔥 STEP 1: fetch latest version
         const payload: ItemPayload = {
           itemID: itemId,
           itemName: itemName.trim(),
@@ -204,19 +189,7 @@ export const ItemDialog = ({
           updatedOnPrev: updatedOnRef.current!,
           removeImage,
         };
-
-        console.log("📤 SAVE PAYLOAD", payload);
-
         const res = await saveItem(payload).unwrap();
-        console.log("✅ SAVE RESPONSE FROM SERVER", res);
-
-        console.log(
-          "🔄 UPDATEDON CHANGE",
-          "OLD →",
-          updatedOnRef.current,
-          "NEW →",
-          res.updatedOn,
-        );
 
         // 🔥 UPDATE LOCAL VERSION AFTER SAVE
         updatedOnRef.current = res.updatedOn;
@@ -224,81 +197,29 @@ export const ItemDialog = ({
         await refetch(); // 🔥 ADD THIS LINE
         savedItemId = itemId;
       }
-      console.log("FINAL ITEM ID FOR UPLOAD:", savedItemId);
-      if (typeof savedItemId !== "number") {
-        console.error("❌ INVALID SAVED ITEM ID");
-        toast.error("Failed to save item. Please try again.");
-        console.groupEnd();
-        return;
-      }
       /* ================= IMAGE UPLOAD ================= */
       if (file && typeof savedItemId === "number") {
-        console.log("🖼️ UPLOADING IMAGE");
         await uploadPicture({ id: savedItemId, file }).unwrap();
-        console.log("✅ IMAGE UPLOADED");
-
         // 🔥 REFRESH PICTURE
         setFile(null);
       }
-
-      toast.success(
-        itemId ? "Item updated successfully" : "Item added successfully",
-      );
-      console.log("🟢 SAVE FLOW SUCCESS");
       onClose();
       onSaved();
       resetForm();
       setErrors({});
-    } catch (err) {
-      const error = err as FetchBaseQueryError;
+    }
+    catch (err: unknown) {
+  const error = err as FetchBaseQueryError;
 
-      console.error("🔥 SAVE FAILED", error);
-
-      console.log("ERROR STATUS", error.status);
-      console.log("UPDATEDON REF AT ERROR TIME", updatedOnRef.current);
-      console.log("EDIT ITEM AT ERROR TIME", editItem);
-      if (error.status === 409) {
-        // 🔥 DUPLICATE NAME CASE
-        if (!itemId || !editItem) {
-          setErrors((prev) => ({
-            ...prev,
-            itemName: "Name already exists.",
-          }));
-
-          toast.error("Duplicate item name not accepted.");
-          console.groupEnd();
-          return;
-        }
-
-        // 🔥 CONCURRENCY CASE (EDIT MODE)
-        console.warn("♻️ Auto refetch and retry");
-
-        toast.error("Item updated by another user. Reloading...");
-        await refetch();
-        onClose();
-
-        console.groupEnd();
-        return;
-      }
-
-      if (error.status === 412) {
-        console.warn("⚠️ 412 PRECONDITION FAILED");
-        setConcurrencyError(true);
-        console.groupEnd();
-        return;
-      }
-
-      if (error.status === 413) {
-        console.warn("⚠️ 413 PAYLOAD TOO LARGE");
-        toast.error("Image size should be less than 2 MB");
-        console.groupEnd();
-        return;
-      }
-
-      console.error("❌ UNKNOWN ERROR", error);
-    } finally {
+  if (error.status === 409) {
+    setErrors((prev) => ({
+      ...prev,
+      itemName: "Name already exists.",
+    }));
+    return;
+  }
+ } finally {
       setIsSaving(false);
-      console.groupEnd();
     }
   };
 
@@ -423,7 +344,7 @@ export const ItemDialog = ({
             multiline
             rows={3}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value) }
             error={!!errors.description}
             helperText={errors.description}
           />

@@ -6,7 +6,6 @@ import {
   useGetItemListQuery,
   useDeleteItemMutation,
 } from "../../services/itemApiRtk";
-import { toast } from "react-toastify";
 import { ItemToolbar } from "../items/ItemToolbar";
 import { ItemTable } from "../items/ItemTable";
 import { ItemDialog } from "../items/ItemDialog";
@@ -22,7 +21,7 @@ import { ItemCardList } from "./ItemCardList";
 
 export const ItemListPage = () => {
 
-  console.log("items render");
+  
   /* ---------------- API ---------------- */
   const { data: items = [], isLoading, refetch } = useGetItemListQuery();
   const [deleteItem] = useDeleteItemMutation();
@@ -58,12 +57,6 @@ export const ItemListPage = () => {
 
   /* ---------------- EDIT ITEM ---------------- */
   const handleEditItem = (item: Item) => {
-    console.log("EDIT ITEM", item); // ✅ THIS
-    console.log("EDIT CLICK ITEM", {
-    itemID: item.itemID,
-    createdOn: item.createdOn,
-    updatedOn: item.updatedOn,
-  });
     setSelectedItemId(item.itemID);
     setDialogOpen(true);
   };
@@ -81,13 +74,9 @@ export const ItemListPage = () => {
     try {
       setIsDeleting(true);
       await deleteItem(deleteItemId.toString()).unwrap();
-      toast.success("Item deleted successfully"); // 🔥 SUCCESS TOAST
       setDeleteItemId(null);
       // 🔥 RTK Query auto-refetches list
-    } catch (err) {
-      console.log(err);
-      toast.error("Failed to delete item, Deleting record exists in invoices.");
-    } finally {
+    }finally {
       setIsDeleting(false);
     }
   };

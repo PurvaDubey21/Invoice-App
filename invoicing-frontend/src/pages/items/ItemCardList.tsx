@@ -15,7 +15,6 @@ import type { Item } from "../../types/itemTypes";
 
 import ThumbnailCell from "./ThumbnailCell";
 
-
 interface Props {
   items: Item[];
   onEdit: (item: Item) => void;
@@ -43,10 +42,8 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
         >
           <CardContent>
             <Stack spacing={2}>
-              
               {/* 🔹 TOP ROW */}
               <Box display="flex" gap={2}>
-                
                 {/* ✅ THUMBNAIL FIX */}
                 <ThumbnailCell itemID={item.itemID} />
 
@@ -76,20 +73,24 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
               {/* 🔹 DETAILS */}
               <Stack spacing={1}>
                 <Box display="flex" justifyContent="space-between">
-                  <Typography color="text.secondary">
-                    Sales Rate
-                  </Typography>
+                  <Typography color="text.secondary">Sales Rate</Typography>
                   <Typography fontWeight={500}>
-                    ₹{item.salesRate.toFixed(2)}
+                    ₹
+                    {Number(item.salesRate ?? 0).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </Typography>
                 </Box>
 
                 <Box display="flex" justifyContent="space-between">
-                  <Typography color="text.secondary">
-                    Discount
-                  </Typography>
+                  <Typography color="text.secondary">Discount</Typography>
                   <Typography fontWeight={500}>
-                    {item.discountPct.toFixed(2)}%
+                    {Number(item.discountPct ?? 0).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    %
                   </Typography>
                 </Box>
               </Stack>
@@ -110,7 +111,6 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
                   <DeleteIcon />
                 </IconButton>
               </Box>
-
             </Stack>
           </CardContent>
         </Card>
@@ -118,4 +118,3 @@ export const ItemCardList = ({ items, onEdit, onDelete }: Props) => {
     </Stack>
   );
 };
-

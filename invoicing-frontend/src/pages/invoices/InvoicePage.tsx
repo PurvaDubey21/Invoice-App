@@ -17,7 +17,6 @@ import { Box, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { ALL_COLUMNS } from "./invoiceColumns.config";
 import type { InvoiceColumnKey } from "./invoiceColumns.config";
-import { toast } from "react-toastify";
 import { useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { InvoiceMobileCards } from "./InvoiceMobileCards";
@@ -192,25 +191,16 @@ export const InvoicePage = () => {
   const handleDeleteConfirm = async () => {
     if (!deleteInvoiceId) return;
 
+     setIsDeleting(true);
     try {
-      setIsDeleting(true);
+      
       await deleteInvoice(deleteInvoiceId).unwrap();
-      toast.success("Invoice deleted successfully"); // 🔥 SUCCESS TOAST
       setDeleteInvoiceId(null);
       // 🔥 RTK Query auto-refetches list
-    } catch (err) {
-      console.log(err);
-      toast.error("Failed to delete invoice");
-    } finally {
+    }finally {
       setIsDeleting(false);
     }
   };
-  // 🔥🔥🔥 EXACT DEBUG LOGS 🔥🔥🔥
-  console.log("📅 PERIOD:", period);
-  console.log("📅 RANGE SENT TO API:", range);
-
-  console.log("📊 METRICS RESPONSE:", metrics);
-
   return (
     <>
       <PageHeader

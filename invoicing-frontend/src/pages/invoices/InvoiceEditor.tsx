@@ -13,9 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import type { SerializedError } from "@reduxjs/toolkit";
+
 
 import {
   useGetInvoiceByIdQuery,
@@ -70,9 +68,6 @@ const InvoiceEditor: React.FC = () => {
   } = useGetInvoiceByIdQuery(invoiceID as number, {
     skip: invoiceID === null,
   });
-
-  console.log("URL param invoiceID:", invoiceID);
-console.log("invoiceData:", invoiceData);
 
   const [insertInvoice, { isLoading: isSavingInsert }] =
     useInsertInvoiceMutation();
@@ -188,45 +183,7 @@ console.log("invoiceData:", invoiceData);
       },
     }));
   };
-  const handleSaveError = useCallback(
-    (err: FetchBaseQueryError | SerializedError) => {
-      // RTK Query error shape
-      if ("status" in err) {
-        const status = err?.status;
-
-        // 1️⃣ Backend validation error
-        if (status === 400) {
-          setHeaderErrors((prev) => ({
-            ...prev,
-            invoiceNo: "Invoice no exists.",
-          }));
-          toast.error("Invoice number already exists");
-          return;
-        }
-
-        // 2️⃣ Concurrency conflict (placeholder – Step 4)
-        if (status === 409) {
-          toast.error("Invoice changed. Reload.");
-          return;
-        }
-
-        // 3️⃣ Server error
-        if (status === 500) {
-          toast.error("Server error. Please try again later.");
-          return;
-        }
-
-        // 4️⃣ Network / unknown
-        toast.error("Network error. Please check your connection.");
-      }
-    },
-    [],
-  );
-
-  /* ----------------------------------
-     Save
-  ---------------------------------- */
-  // 🔴 imports SAME rahenge
+ 
 
   /* ----------------------------------
    Save
@@ -238,24 +195,14 @@ console.log("invoiceData:", invoiceData);
 
     const isEditMode = !!invoiceState.header.invoiceID;
 
-    if (Object.keys(headerErrors).length > 0) {
-      toast.error("Please fix header errors");
-      return;
-    }
-    if (!invoiceState.header.invoiceNo) {
-      toast.error("Invoice number is required");
-      return;
-    }
+    if (Object.keys(headerErrors).length > 0) return;
+    
+    if (!invoiceState.header.invoiceNo)  return;
     // 2️⃣ Line validation
-    if (!hasAtLeastOneValidLine(invoiceState.lines)) {
-      toast.error("Please add at least one valid invoice line");
-      return;
-    }
+    if (!hasAtLeastOneValidLine(invoiceState.lines)) return;
+    
 
-    if (!lineItemsRef.current?.validate()) {
-      toast.error("Please select an item for each line.");
-      return;
-    }
+    if (!lineItemsRef.current?.validate()) return;
 
     // 3️⃣ Build lines payload (shared)
     const linesPayload = invoiceState.lines.map((l, index) => ({
@@ -294,7 +241,6 @@ console.log("invoiceData:", invoiceData);
           lines: linesPayload,
         };
 
-    console.log("SAVE PAYLOAD", JSON.stringify(payload, null, 2));
 
     try {
       if (isEditMode) {
@@ -302,18 +248,15 @@ console.log("invoiceData:", invoiceData);
       } else {
         await insertInvoice(payload).unwrap(); // POST
       }
-      toast.success("Invoice saved / Updated successfully");
       navigate("/invoices");
     } catch (err) {
       console.error("Save invoice failed:", err);
-      handleSaveError(err as FetchBaseQueryError | SerializedError);
     }
   }, [
     invoiceState, 
     insertInvoice, 
     updateInvoice, 
-    navigate, 
-    handleSaveError
+    navigate
   ]);
 
   useEffect(() => {

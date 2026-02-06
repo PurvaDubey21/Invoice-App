@@ -35,8 +35,13 @@ export interface InvoiceLineItemsRef {
 /* ----------------------------------
    Helpers
 ---------------------------------- */
-const calcAmount = (l: InvoiceLine) =>
-  Number((l.qty * l.rate - (l.qty * l.rate * l.discountPct) / 100).toFixed(2));
+const round2 = (n: number) =>
+  Math.round(n * 100) / 100;
+const calcAmount = (l: InvoiceLine) => {
+  const raw = l.qty * l.rate - (l.qty * l.rate * l.discountPct) / 100;
+  return round2(raw);
+};
+  
 
 const formatMoney = (v: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -71,7 +76,7 @@ const InvoiceLineItems = React.forwardRef<InvoiceLineItemsRef, Props>(
     const [triggerGetItemById] = useLazyGetItemByIdQuery();
 
     const { data: itemLookupList = [] } = useGetItemLookupListQuery();
-    console.log("itemLookupList:", itemLookupList);
+    
 
     const [itemDetailMap, setItemDetailMap] = React.useState<
       Record<number, { salesRate: number; discountPct: number }>

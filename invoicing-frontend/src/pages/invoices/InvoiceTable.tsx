@@ -82,7 +82,14 @@ export const InvoiceTable = ({
       headerName: "Tax %",
       flex: 1,
 
-      renderCell: (params) => `${Number(params.value ?? 0).toFixed(2)} %`,
+      renderCell: (params) => {
+        const value = Number(params.value ?? 0);
+
+        return `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })} %`;
+      },
     },
 
     {
@@ -95,7 +102,8 @@ export const InvoiceTable = ({
 
         return `₹${value.toLocaleString("en-IN", {
           minimumFractionDigits: 2,
-        })}`;
+          maximumFractionDigits: 2
+        })} %`;
       },
     },
 

@@ -1,4 +1,5 @@
 import { baseApi } from "../api/baseQuery";
+import { toast } from "react-toastify";
 import type {
   Invoice,
   InvoiceMetrics,
@@ -10,6 +11,24 @@ import type {
   InvoiceApiResponse,
   SaveInvoiceResponse,
 } from "../types/invoiceEditor.types";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+
+const handleErrorToast = (err: unknown) => {
+  const error = err as { error?: FetchBaseQueryError };
+  const status = error?.error?.status;
+
+  if (status === 400) {
+    toast.error("Invoice number already exists.");
+  } else if (status === 409) {
+    toast.error("Invoice changed. Reload.");
+  } else if (status === 500) {
+    toast.error("Server error. Try again later.");
+  } else if (status === "FETCH_ERROR") {
+    toast.error("Network error. Check connection.");
+  } else {
+    toast.error("Something went wrong.");
+  }
+};
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -57,6 +76,14 @@ export const invoiceApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: ["Invoice"],
+      async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Invoice deleted successfully");
+    } catch (err) {
+      handleErrorToast(err);
+    }
+  },
     }),
     // ✅ Get single invoice by ID (Editor - Edit mode)
     getInvoiceById: builder.query<InvoiceApiResponse, number>({
@@ -74,6 +101,14 @@ export const invoiceApi = baseApi.injectEndpoints({
         body: payload,
       }),
       invalidatesTags: ["Invoice"],
+      async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Invoice saved successfully");
+    } catch (err) {
+      handleErrorToast(err); // ✅ THIS LINE FIXES ESLINT
+    }
+  },
     }),
 
     updateInvoice: builder.mutation<SaveInvoiceResponse, SaveInvoicePayload>({
@@ -83,6 +118,15 @@ export const invoiceApi = baseApi.injectEndpoints({
         body: payload,
       }),
       invalidatesTags: ["Invoice"],
+
+      async onQueryStarted(_, { queryFulfilled }) {
+    try {
+      await queryFulfilled;
+      toast.success("Invoice updated successfully");
+    } catch (err) {
+      handleErrorToast(err); // ✅ required
+    }
+  },
     }),
   }),
 
