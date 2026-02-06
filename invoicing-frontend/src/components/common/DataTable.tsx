@@ -15,10 +15,9 @@ export const DataTable = <T,>({
   rows,
   columns,
   loading,
-  height = 450,
   getRowId,
   columnVisibilityModel,
- 
+  height = 350,
 
   
 }: DataTableProps<T>) => {
@@ -38,7 +37,7 @@ export const DataTable = <T,>({
         loading={loading}
         getRowId={getRowId}
         hideFooter
-        rowHeight={80}
+        rowHeight={68}
         disableRowSelectionOnClick
         // 👇 FORWARD TO MUI GRID
         columnVisibilityModel={columnVisibilityModel}

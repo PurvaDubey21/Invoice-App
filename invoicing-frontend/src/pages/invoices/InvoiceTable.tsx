@@ -161,6 +161,7 @@ export const InvoiceTable = ({
   -------------------------------- */
   return (
     <DataTable
+       
       rows={rows}
       columns={columns}
       loading={loading}

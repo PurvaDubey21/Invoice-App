@@ -52,13 +52,13 @@ const onSubmit = async (data: SignupFormValues) => {
 
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-x-hidden ">
+    <div className="min-h-screen bg-gray-50 flex flex-col ">
       {/* ================= COMMON HEADER ================= */}
       <Header />
 
       {/* ================= PAGE TITLE ================= */}
-    <div className="flex-1 flex flex-col items-center justify-center px-4 ">
-      <div className="text-center mt-4">
+    <div className="flex-1 flex flex-col items-center px-4 overflow-hidden ">
+      <div className="text-center mt-2">
         <Typography variant="h4" fontWeight={600} sx={{ color: "#525355" }}>
           Create Your Account
         </Typography>
@@ -68,8 +68,12 @@ const onSubmit = async (data: SignupFormValues) => {
       </div>
 
       {/* ================= CARD CONTAINER ================= */}
-      <div className="flex justify-center px-4 mt-4 mb-4 ">
-        <Paper className="w-full max-w-6xl px-4 md:px-8 py-6 " elevation={5}>
+      <div className="flex justify-center px-4 mt-2 w-full">
+        <Paper className="w-full max-w-6xl px-4 md:px-6 py-4 " elevation={5} 
+        sx={{maxHeight: "calc(100vh - 200px)",
+           overflowY:"auto"
+        }}
+        >
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* ================= TWO COLUMNS ================= */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -211,7 +215,8 @@ const onSubmit = async (data: SignupFormValues) => {
       
 
       {/* ================= COMMON FOOTER ================= */}
-      <Footer />
+      <Footer 
+      message=" © 2025 InvoiceApp. All rights reserved."/>
     
     </div>
   );

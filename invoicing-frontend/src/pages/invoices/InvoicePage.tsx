@@ -18,19 +18,21 @@ import { useNavigate } from "react-router-dom";
 import { ALL_COLUMNS } from "./invoiceColumns.config";
 import type { InvoiceColumnKey } from "./invoiceColumns.config";
 import { toast } from "react-toastify";
+import { useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { InvoiceMobileCards } from "./InvoiceMobileCards";
+import { useOutletContext } from "react-router-dom";
 
 export const InvoicePage = () => {
- 
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [period, setPeriod] = useState("month");
- 
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { openSidebar } = useOutletContext<{ openSidebar: () => void }>();
   const [range, setRange] = useState(() => {
     const today = new Date();
     const from = new Date(today.getFullYear(), today.getMonth(), 1);
-
-      
 
     return {
       from: from.toISOString().replace("Z", ""),
@@ -39,16 +41,15 @@ export const InvoicePage = () => {
   });
 
   const [selectedRange, setSelectedRange] = useState<{
-  from: string;
-  to: string;
-} | null>(null);
-
+    from: string;
+    to: string;
+  } | null>(null);
 
   const { data: list = [], isLoading } = useGetInvoiceListQuery(range);
   const { data: metrics } = useGetInvoiceMetricsQuery({
-  from: range.from,
-  to: range.to,
-});
+    from: range.from,
+    to: range.to,
+  });
 
   const { data: trend = [] } = useGetInvoiceTrend12mQuery({
     asOf: range.to,
@@ -157,38 +158,38 @@ export const InvoicePage = () => {
       to: to.toISOString().replace("Z", ""),
     };
   };
-  
+
   const handlePeriodChange = ({
-  period,
-  from,
-  to,
-}: {
-  period: string;
-  from?: string;
-  to?: string;
-}) => {
-  setPeriod(period);
+    period,
+    from,
+    to,
+  }: {
+    period: string;
+    from?: string;
+    to?: string;
+  }) => {
+    setPeriod(period);
 
-  // ✅ Custom range
-  if (period === "custom" && from && to) {
-    setRange({
-      from: `${from}T00:00:00`,
-      to: `${to}T23:59:59`,
-    });
+    // ✅ Custom range
+    if (period === "custom" && from && to) {
+      setRange({
+        from: `${from}T00:00:00`,
+        to: `${to}T23:59:59`,
+      });
 
-    // 🔥 store for UI display
-    setSelectedRange({ from, to });
-    return;
-  }
+      // 🔥 store for UI display
+      setSelectedRange({ from, to });
+      return;
+    }
 
-  // ✅ Non-custom period
-  const newRange = calculateRange(period);
-  setRange(newRange);
+    // ✅ Non-custom period
+    const newRange = calculateRange(period);
+    setRange(newRange);
 
-  // clear custom display when not custom
-  setSelectedRange(null);
-};
- const handleDeleteConfirm = async () => {
+    // clear custom display when not custom
+    setSelectedRange(null);
+  };
+  const handleDeleteConfirm = async () => {
     if (!deleteInvoiceId) return;
 
     try {
@@ -211,50 +212,83 @@ export const InvoicePage = () => {
   console.log("📊 METRICS RESPONSE:", metrics);
 
   return (
-    
     <>
-    
       <PageHeader
         title="Invoices"
         value={period}
-         selectedRange={selectedRange}
+        selectedRange={selectedRange}
         onChange={handlePeriodChange}
+        onMenuClick={openSidebar}
       />
       <Box
         sx={{
           backgroundColor: "#f5f6f7",
-          minHeight: "100vh",
-          p: 6,
+          px: { xs: 2, md: 6 },
+          py: { xs: 2, md: 2 }
         }}
       >
         {/* TOP CARDS */}
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
-          <Box flex={1}>
+        <Stack direction="row" flexWrap="wrap" gap={3} mb={3}>
+          {/* CARD 1 */}
+          <Box
+            sx={{
+              width: {
+                xs: "calc(50% - 12px)", // 2 per row mobile
+                md: "calc(25% - 18px)", // 4 per row desktop
+              },
+            }}
+          >
             <StatCard
-              title="Invoices"
+              title="Number of Invoices"
               value={metrics ? metrics.invoiceCount : "-"}
+              
             />
           </Box>
 
-          <Box flex={1}>
+          {/* CARD 2 */}
+          <Box
+            sx={{
+              width: {
+                xs: "calc(50% - 12px)",
+                md: "calc(25% - 18px)",
+              },
+            }}
+          >
             <StatCard
-              title="Total Amount"
+              title="Total Invoice Amount"
               value={
                 metrics
                   ? `₹${metrics.totalAmount.toLocaleString("en-IN")}`
                   : "-"
               }
+              
             />
           </Box>
 
-          <Box flex={1}>
+          {/* CARD 3 */}
+          <Box
+            sx={{
+              width: {
+                xs: "calc(50% - 12px)",
+                md: "calc(25% - 18px)",
+              },
+            }}
+          >
             <StatCard title="Last 12 Months">
               <InvoiceTrendChart data={trend} />
             </StatCard>
           </Box>
 
-          <Box flex={1}>
-            <StatCard title="Top Items">
+          {/* CARD 4 */}
+          <Box
+            sx={{
+              width: {
+                xs: "calc(50% - 12px)",
+                md: "calc(25% - 18px)",
+              },
+            }}
+          >
+            <StatCard title="Top 5 Items">
               <InvoiceTopItemsChart data={topItems} />
             </StatCard>
           </Box>
@@ -272,24 +306,33 @@ export const InvoicePage = () => {
         />
 
         {/* TABLE */}
-        <InvoiceTable
+        {isMobile ? (
+          <InvoiceMobileCards 
           rows={filteredList}
-          visibleColumns={visibleColumns}
-          loading={isLoading}
           onEdit={(id) => navigate(`/invoices/editor?id=${id}`)}
-          onDelete={(id) => setDeleteInvoiceId(id)}
-        />
+          onDelete={(id) => setDeleteInvoiceId(id)} 
+          />
+        ) : (
+          <InvoiceTable
+            rows={filteredList}
+            visibleColumns={visibleColumns}
+            loading={isLoading}
+            onEdit={(id) => navigate(`/invoices/editor?id=${id}`)}
+            onDelete={(id) => setDeleteInvoiceId(id)}
+          />
+        )}
 
-          {/* ---------- DELETE CONFIRM ---------- */}
-              <ConfirmDeleteDialog
-                open={!!deleteInvoiceId}
-                title="Delete Invoice"
-                message="Are you sure you want to delete this invoice?"
-                loading={isDeleting}
-                onCancel={() => setDeleteInvoiceId(null)}
-                onConfirm={handleDeleteConfirm}
-            />
+        {/* ---------- DELETE CONFIRM ---------- */}
+        <ConfirmDeleteDialog
+          open={!!deleteInvoiceId}
+          title="Delete Invoice"
+          message="Are you sure you want to delete this invoice?"
+          loading={isDeleting}
+          onCancel={() => setDeleteInvoiceId(null)}
+          onConfirm={handleDeleteConfirm}
+        />
       </Box>
+      
     </>
   );
 };

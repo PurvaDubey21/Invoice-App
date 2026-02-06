@@ -5,7 +5,11 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Stack,
+  useMediaQuery,
 } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { useState } from "react";
@@ -33,6 +37,8 @@ export const ItemToolbar = ({
   searchValue,
   onSearchChange,
 }: Props) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
 
   const open = Boolean(exportAnchor);
@@ -61,11 +67,10 @@ export const ItemToolbar = ({
       <TextField
         size="small"
         placeholder="Search items"
-        fullWidth
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         sx={{
-          width: 450,
+          width: { xs: "100%", sm: "450px" },
           "& .MuiOutlinedInput-root": {
             borderRadius: "8px",
             fontSize: 18,
@@ -79,7 +84,11 @@ export const ItemToolbar = ({
           ),
         }}
       />
-
+      <Stack
+          direction="row"
+          spacing={1}
+          width={isMobile ? "100%" : "auto"}
+        >
       <Box
         display="flex"
         gap={1}
@@ -143,6 +152,7 @@ export const ItemToolbar = ({
           <ViewColumnIcon />
         </IconButton>
       </Box>
+      </Stack>
     </Box>
   );
 };

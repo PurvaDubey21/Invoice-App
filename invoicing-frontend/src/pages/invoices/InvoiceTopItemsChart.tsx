@@ -25,14 +25,14 @@ export const InvoiceTopItemsChart = ({ data }: Props) => {
   }));
 
   return (
-    <Box height={150} >
+    <Box height={115} >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={chartData}
             dataKey="value"
-            nameKey="name"
-            outerRadius={45}
+            nameKey="name" 
+            outerRadius={25}
             label
           >
             {chartData.map((_, index) => (

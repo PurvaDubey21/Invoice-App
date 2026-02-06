@@ -136,8 +136,7 @@ export const ItemListPage = () => {
   return (
     <Box
       sx={{
-        height: "100vh",
-        overflow: "hidden",
+
         backgroundColor: "#f5f6f7",
       }}
     >

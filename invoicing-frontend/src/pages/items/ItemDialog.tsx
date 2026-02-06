@@ -67,8 +67,7 @@ export const ItemDialog = ({
   });
 
   /* 🔥 ADD THIS HERE (JUST AFTER STATE) */
- const previewUrl =
-  file
+  const previewUrl = file
     ? URL.createObjectURL(file)
     : itemId && !removeImage && pictureUrl
       ? typeof pictureUrl === "string"
@@ -258,15 +257,26 @@ export const ItemDialog = ({
       console.log("ERROR STATUS", error.status);
       console.log("UPDATEDON REF AT ERROR TIME", updatedOnRef.current);
       console.log("EDIT ITEM AT ERROR TIME", editItem);
-      if (error.status === 409 && itemId) {
-        console.warn("♻️ Auto refetch and retry");
-        if (editItem) {
-          toast.error("Item updated by another user. Reloading...");
-          await refetch(); // 🔥 reload latest
-          onClose(); // 🔥 stale dialog close
-        } else {
-          setErrors({ itemName: "Name already exists." });
+      if (error.status === 409) {
+        // 🔥 DUPLICATE NAME CASE
+        if (!itemId || !editItem) {
+          setErrors((prev) => ({
+            ...prev,
+            itemName: "Name already exists.",
+          }));
+
+          toast.error("Duplicate item name not accepted.");
+          console.groupEnd();
+          return;
         }
+
+        // 🔥 CONCURRENCY CASE (EDIT MODE)
+        console.warn("♻️ Auto refetch and retry");
+
+        toast.error("Item updated by another user. Reloading...");
+        await refetch();
+        onClose();
+
         console.groupEnd();
         return;
       }
@@ -344,7 +354,7 @@ export const ItemDialog = ({
               </Avatar>
 
               {/* 🔥 REMOVE IMAGE BUTTON */}
-              {(file ||(itemId &&pictureUrl && !removeImage)) && (
+              {(file || (itemId && pictureUrl && !removeImage)) && (
                 <IconButton
                   size="small"
                   onClick={handleRemoveImage}

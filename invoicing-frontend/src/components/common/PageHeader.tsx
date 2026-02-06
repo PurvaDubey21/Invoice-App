@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import {
   Box,
   Typography,
-  ButtonGroup,
   Button,
   Popover,
   TextField,
   Stack,
+  useMediaQuery,
+  IconButton,
 } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
+import MenuIcon from "@mui/icons-material/Menu";
 
 const filters = [
   { label: "Today", value: "today" },
@@ -16,17 +20,23 @@ const filters = [
   { label: "Last 12 Months", value: "12m" },
   { label: "Custom", value: "custom" },
 ];
+
 export const PageHeader = ({
-  title,
+  title = "Invoices",
   value,
   selectedRange,
   onChange,
+  onMenuClick,
 }: {
-  title: string;
+  title?: string;
   value: string;
   selectedRange?: { from: string; to: string } | null;
-  onChange: (payload: { period: string; from?: string; to?: string }) => void; // ✅ FIXED
+  onChange: (payload: { period: string; from?: string; to?: string }) => void;
+  onMenuClick?: () => void;
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -41,8 +51,6 @@ export const PageHeader = ({
 
   const handleApplyCustomRange = () => {
     if (!fromDate || !toDate) return;
-
-    // ❌ invalid range block
     if (fromDate > toDate) return;
 
     onChange({
@@ -50,116 +58,127 @@ export const PageHeader = ({
       from: fromDate,
       to: toDate,
     });
-    // ✅ clear dates after apply
+
     setFromDate("");
     setToDate("");
-
-    // close popover
     setAnchorEl(null);
   };
 
   return (
-
     <Box
-     sx={{
+      sx={{
         backgroundColor: "#fff",
         borderBottom: "1px solid #e5e7eb",
         position: "sticky",
         top: 0,
         zIndex: 10,
-      }}>
-    <Box
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      py={2}
-      px={6}
-     
+      }}
     >
-      {/* LEFT: TITLE */}
-      <Typography fontSize={24} fontWeight={600} color="#535255">
-        {title}
-      </Typography>
+      <Stack
+        direction={isMobile ? "column" : "row"}
+        justifyContent="space-between"
+        alignItems={isMobile ? "flex-start" : "center"}
+        spacing={isMobile ? 1.5 : 0}
+        py={{ xs: 2, md: 1 }}
+        px={{ xs: 2, md: 6 }}
+      >
+        {/* TITLE + HAMBURGER */}
+        <Box display="flex" alignItems="center" gap={1}>
+          {isMobile && (
+            <IconButton onClick={onMenuClick}>
+              <MenuIcon />
+            </IconButton>
+          )}
 
-      {/* RIGHT: FILTER BUTTONS */}
-      {/* RIGHT: FILTER BUTTONS */}
-      <Box display="flex" alignItems="center">
-        <ButtonGroup
-          variant="outlined"
-          sx={{
-            "& .MuiButton-root": {
-              borderRadius: "999px",
-              textTransform: "none",
-              fontSize: 14,
-              fontWeight: 600,
-              padding: "4px 14px",
-              borderColor: "#d1d2d4",
-              ml: 2,
-            },
-          }}
-        >
-          {filters.map((f) => (
-            <Button
-              key={f.value}
-              onClick={(e) => handleClick(f.value, e)}
-              sx={{
-                backgroundColor: value === f.value ? "#525355" : "transparent",
-                color: value === f.value ? "#fff" : "#525355",
-                "&:hover": {
-                  backgroundColor: value === f.value ? "#424244" : "#f0f1f2",
-                },
-              }}
-            >
-              {f.label}
-            </Button>
-          ))}
-        </ButtonGroup>
-
-        {value === "custom" && selectedRange && (
-          <Typography fontSize={12} color="#777" sx={{ ml: 2, mt: 0.5 }}>
-            {selectedRange.from} → {selectedRange.to}
+          <Typography
+            fontSize={{ xs: 18, md: 24 }}
+            fontWeight={600}
+            color="#535255"
+          >
+            {title}
           </Typography>
-        )}
+        </Box>
 
-        {/* ✅ SINGLE Popover (NOT inside map) */}
-        <Popover
-          open={Boolean(anchorEl)}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Box p={2} minWidth={260}>
-            <Stack spacing={2}>
-              <TextField
-                label="From"
-                type="date"
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-
-              <TextField
-                label="To"
-                type="date"
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-
+        {/* FILTERS */}
+        <Stack spacing={1} width="100%">
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            gap={1}
+            justifyContent={isMobile ? "flex-start" : "flex-end"}
+          >
+            {filters.map((f) => (
               <Button
-                variant="contained"
-                onClick={handleApplyCustomRange}
-                disabled={!fromDate || !toDate}
+                key={f.value}
+                onClick={(e) => handleClick(f.value, e)}
+                size="small"
+                sx={{
+                  borderRadius: "999px",
+                  textTransform: "none",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  px: 1.5,
+                  py: 0.5,
+                  border: "1px solid #d1d2d4",
+                  backgroundColor:
+                    value === f.value ? "#525355" : "transparent",
+                  color: value === f.value ? "#fff" : "#525355",
+                  "&:hover": {
+                    backgroundColor:
+                      value === f.value ? "#424244" : "#f0f1f2",
+                  },
+                }}
               >
-                Apply
+                {f.label}
               </Button>
-            </Stack>
+            ))}
           </Box>
-        </Popover>
-      </Box>
-    </Box>
+
+          {value === "custom" && selectedRange && (
+            <Typography fontSize={12} color="#777">
+              {selectedRange.from} → {selectedRange.to}
+            </Typography>
+          )}
+        </Stack>
+      </Stack>
+
+      {/* DATE POPOVER */}
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Box p={2} minWidth={260}>
+          <Stack spacing={2}>
+            <TextField
+              label="From"
+              type="date"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+
+            <TextField
+              label="To"
+              type="date"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+
+            <Button
+              variant="contained"
+              onClick={handleApplyCustomRange}
+              disabled={!fromDate || !toDate}
+            >
+              Apply
+            </Button>
+          </Stack>
+        </Box>
+      </Popover>
     </Box>
   );
 };

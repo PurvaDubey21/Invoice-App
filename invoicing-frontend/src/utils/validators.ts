@@ -4,5 +4,5 @@ export const isValidEmail = (email: string) =>
 export const isValidPassword = (password: string) =>
 password.length >= 8 && password.length <= 20;
 
-
-
+export const isEmptyPassword = (password: string) => 
+password.length === 0;

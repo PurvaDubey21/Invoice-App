@@ -7,6 +7,7 @@ export interface Invoice {
   taxPercentage: number;
   taxAmount: number;
   invoiceAmount: number;
+  totalItems: number;
 }
 
 export interface InvoiceMetrics {

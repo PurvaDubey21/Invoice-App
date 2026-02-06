@@ -19,7 +19,7 @@ import axios from "axios";
 import { Header } from "../../components/layout/Header";
 
 import { loginApi } from "../../services/auth.api";
-import { isValidEmail, isValidPassword } from "../../utils/validators";
+import { isValidEmail, isValidPassword, isEmptyPassword } from "../../utils/validators";
 import { Footer } from "../../components/layout/Footer";
 
 const LoginPage = () => {
@@ -40,7 +40,10 @@ const LoginPage = () => {
     setError("Enter a valid email.");
     return;
   }
-  
+  if(isEmptyPassword(password)){
+    setError("Enter your password.");
+    return;
+  }
   if (!isValidPassword(password)) {
     setError("Password must be 8–20 characters.");
     return;
@@ -195,7 +198,9 @@ const LoginPage = () => {
         </Card>
         
       </Box>
-      <Footer />
+      <Footer 
+      message=" © 2025 InvoiceApp. All rights reserved."
+      showLinks />
     </Box>
   );
 };

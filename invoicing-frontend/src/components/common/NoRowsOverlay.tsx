@@ -8,7 +8,7 @@ export const NoRowsOverlay = ({ message }: { message: string }) => {
       alignItems="center"
       justifyContent="center"
       flexDirection="column"
-      sx={{ color: "#6b7280" }}
+      sx={{ color: "#6b7280"}}
     >
       <Typography fontWeight={600}>
         {message}

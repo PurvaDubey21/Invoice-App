@@ -1,19 +1,24 @@
 import { useState } from "react";
-import { 
-  Box, 
-  TextField, 
-  Button ,
+import {
+  Box,
+  TextField,
+  Button,
   Menu,
   MenuItem,
   Checkbox,
-  ListItemText, 
+  ListItemText,
+  useMediaQuery,
+  InputAdornment,
 } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
+
 import AddIcon from "@mui/icons-material/Add";
 import UploadIcon from "@mui/icons-material/Upload";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import type { ALL_COLUMNS, InvoiceColumnKey } from "../../pages/invoices/invoiceColumns.config";
 import SearchIcon from "@mui/icons-material/Search";
-import InputAdornment from "@mui/material/InputAdornment";
+
+import type { ALL_COLUMNS, InvoiceColumnKey } from "../../pages/invoices/invoiceColumns.config";
 
 type ActionBarProps = {
   onCreateInvoice: () => void;
@@ -25,8 +30,6 @@ type ActionBarProps = {
   onSearchChange: (value: string) => void;
 };
 
-
-
 export const ActionBar = ({
   onCreateInvoice,
   searchText,
@@ -36,112 +39,116 @@ export const ActionBar = ({
   handelExport,
   onToggleColumn,
 }: ActionBarProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  return (
+
+ return (
+  <Box
+    display="flex"
+    flexDirection={{ xs: "column", sm: "row" }}
+    alignItems="center"
+    justifyContent="space-between"
+    gap={2}
+    mb={2}
+  >
+    {/* 🔍 SEARCH */}
+    <TextField
+      size="small"
+      placeholder="Search invoice no, customer"
+      value={searchText}
+      onChange={(e) => onSearchChange(e.target.value)}
+      fullWidth={isMobile}
+      sx={{
+        width: { xs: "100%", sm: 450 },
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "8px",
+          fontSize: 16,
+        },
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon fontSize="small" sx={{ color: "#9ca3af" }} />
+          </InputAdornment>
+        ),
+      }}
+    />
+
+    {/* 🔘 BUTTONS */}
     <Box
       display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      mb={2}
+      gap={1}
+      width={{ xs: "100%", sm: "auto" }}
+      justifyContent={{ xs: "space-between", sm: "flex-end" }}
     >
-      <TextField
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
         size="small"
-        fullWidth
-        placeholder="Search invoice no, customer"
-        value={searchText}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onClick={onCreateInvoice}
         sx={{
-          width: 450,
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "8px",
-            fontSize: 18,
-          },
+          flex: { xs: 1, sm: "unset" },
+          backgroundColor: "#525355",
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: 14,
         }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" sx={{ color: "#9ca3af" }} />
-            </InputAdornment>
-          ),
-        }}
-      />
+      >
+        New Invoice
+      </Button>
 
-      <Box display="flex" gap={1}>
-        <Button
-         
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            console.log("New Invoice clicked");
-            onCreateInvoice();
-          }}
-            sx={{
-            color: "#fff",
-            borderColor: "#525355",
-            fontWeight: 600,
-            backgroundColor: "#525355",
-            textTransform: "none",
-            "&:hover": {
-              borderColor: "#3f4041",
-              backgroundColor: "#3f4041",
-            },
-          }}
-         
-        >
-          New Invoice
-        </Button>
-        <Button 
+      <Button
         variant="outlined"
         startIcon={<UploadIcon />}
+        size="small"
         onClick={handelExport}
-         sx={{
-            color: "#525355",
-            borderColor: "#525355",
-            textTransform: "none",
-            fontWeight: 600,
-            "&:hover": {
-              borderColor: "#3f4041",
-              backgroundColor: "rgba(82,83,85,0.04)",
-            },
-          }}
-        >
-          Export
-        </Button>
-        <Button  
+        sx={{
+          flex: { xs: 1, sm: "unset" },
+          borderColor: "#525355",
+          color: "#525355",
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: 14,
+        }}
+      >
+        Export
+      </Button>
+
+      <Button
         variant="outlined"
         startIcon={<ViewColumnIcon />}
+        size="small"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-         sx={{
-            color: "#525355",
-            fontWeight: 600,
-            borderColor: "#525355",
-            textTransform: "none",
-            "&:hover": {
-              borderColor: "#3f4041",
-              backgroundColor: "rgba(82,83,85,0.04)",
-            },
-          }}
-        >
-          Columns
-        </Button>
-
-         <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={() => setAnchorEl(null)}
-        >
-          {columns.map((col) => (
-            <MenuItem
-              key={col.key}
-              onClick={() => onToggleColumn(col.key)}
-            >
-              <Checkbox checked={visibleColumns.includes(col.key)} />
-              <ListItemText primary={col.label} />
-            </MenuItem>
-          ))}
-        </Menu>
-      </Box>
+        sx={{
+          flex: { xs: 1, sm: "unset" },
+          borderColor: "#525355",
+          color: "#525355",
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: 14,
+        }}
+      >
+        Columns
+      </Button>
     </Box>
-  );
+
+    {/* 📋 MENU */}
+    <Menu
+      anchorEl={anchorEl}
+      open={open}
+      onClose={() => setAnchorEl(null)}
+    >
+      {columns.map((col) => (
+        <MenuItem key={col.key} onClick={() => onToggleColumn(col.key)}>
+          <Checkbox checked={visibleColumns.includes(col.key)} />
+          <ListItemText primary={col.label} />
+        </MenuItem>
+      ))}
+    </Menu>
+  </Box>
+);
+
 };

@@ -37,7 +37,7 @@ export const InvoiceTrendChart = ({ data }: Props) => {
 
 
   return (
-    <ResponsiveContainer width="100%" height={120}>
+    <ResponsiveContainer width="100%" height={115}>
       <LineChart data={chartData}>
         <XAxis dataKey="month" />
         <YAxis hide />

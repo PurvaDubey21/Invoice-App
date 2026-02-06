@@ -8,16 +8,18 @@ import {
   Box,
   Tooltip,
 } from "@mui/material";
+
 import {
   Dashboard,
   ReceiptLong,
   Inventory,
-  
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
 
+import { useLocation, useNavigate } from "react-router-dom";
+import { useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 const EXPANDED_WIDTH = 240;
 const COLLAPSED_WIDTH = 64;
@@ -30,47 +32,34 @@ const menuItems = [
 
 export const Sidebar = ({
   collapsed,
-  onToggle,
+  onToggleCollapse,
+  mobileOpen,
+  onMobileClose,
 }: {
   collapsed: boolean;
-  onToggle: () => void;
+  onToggleCollapse: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }) => {
- 
   const navigate = useNavigate();
   const location = useLocation();
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
-        flexShrink: 0,
-        whiteSpace: "nowrap",
-        "& .MuiDrawer-paper": {
-          width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
-          transition: "width 0.25s ease",
-          overflowX: "hidden",
-          backgroundColor: "#1f2937", // ChatGPT dark
-          color: "#fff",
-          position: "fixed",
-          borderRight: "none",
-        },
-      }}
-    >
-      {/* 🔹 Toggle Button */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: collapsed ? "center" : "flex-end",
-          p: 1,
-        }}
-      >
-        <IconButton onClick={onToggle} sx={{ color: "#fff" }}>
-          {collapsed ? <ChevronRight /> : <ChevronLeft />}
-        </IconButton>
-      </Box>
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-      {/* 🔹 Menu */}
+
+  /* ---------------- DRAWER CONTENT ---------------- */
+  const drawerContent = (
+    <>
+      {/* Collapse Toggle (Desktop only) */}
+      {!isMobile && (
+        <Box display="flex" justifyContent="flex-end" p={1}>
+          <IconButton onClick={onToggleCollapse} sx={{ color: "#fff" }}>
+            {collapsed ? <ChevronRight /> : <ChevronLeft />}
+          </IconButton>
+        </Box>
+      )}
+
       <List>
         {menuItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
@@ -82,7 +71,10 @@ export const Sidebar = ({
               placement="right"
             >
               <ListItemButton
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  if (isMobile) onMobileClose();
+                }}
                 sx={{
                   mx: 1,
                   my: 0.5,
@@ -110,6 +102,48 @@ export const Sidebar = ({
           );
         })}
       </List>
+    </>
+  );
+
+  /* ---------------- MOBILE ---------------- */
+  if (isMobile) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        ModalProps={{keepMounted: true}}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: EXPANDED_WIDTH,
+            backgroundColor: "#1f2937",
+            color: "#fff",
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+    );
+  }
+
+  /* ---------------- DESKTOP ---------------- */
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
+          width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+          transition: "width 0.25s ease",
+          overflowX: "hidden",
+          backgroundColor: "#1f2937",
+          color: "#fff",
+          borderRight: "none",
+        },
+      }}
+    >
+      {drawerContent}
     </Drawer>
   );
 };
