@@ -26,7 +26,7 @@ export const ItemListPage = () => {
   const { data: items = [], isLoading, refetch } = useGetItemListQuery();
   const [deleteItem] = useDeleteItemMutation();
 
-  /* ---------------- UI STATE ---------------- */
+  /* ---------------- UI STATE ---------------- */ 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -76,7 +76,12 @@ export const ItemListPage = () => {
       await deleteItem(deleteItemId.toString()).unwrap();
       setDeleteItemId(null);
       // 🔥 RTK Query auto-refetches list
-    }finally {
+    }
+    catch {
+    // ✅ close dialog on error too
+    setDeleteItemId(null);
+    }
+    finally {
       setIsDeleting(false);
     }
   };
@@ -139,7 +144,7 @@ export const ItemListPage = () => {
       >
         {/* ---------- PAGE HEADER ---------- */}
         <Typography
-          variant={isMobile ? "h5" : "h4"}
+          fontSize={{ xs: 18, md: 24 }}
           fontWeight={600}
           color="#525355"
         >

@@ -396,7 +396,7 @@ const InvoiceLineItems = React.forwardRef<InvoiceLineItemsRef, Props>(
                     <Typography color="text.secondary" fontWeight={600}>
                       {index + 1}
                     </Typography>
-                  </Box>
+                   </Box>
 
                   {/* Item Dropdown (dummy for now) */}
                   <Box flex={2}>

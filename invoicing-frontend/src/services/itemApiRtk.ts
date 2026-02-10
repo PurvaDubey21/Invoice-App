@@ -18,7 +18,7 @@ const handleItemError = (err: unknown) => {
     toast.error("Image size should be less than 2 MB");
   } 
   else if (status === 400) {
-    toast.error("Validation error.");
+    toast.error("Deleting record exists in invoices.");
   } 
   else if (status === 500) {
     toast.error("Server error.");
@@ -93,6 +93,7 @@ saveItem: builder.mutation<
       toast.success("Item deleted successfully");
     } catch (err) {
       handleItemError(err);
+
     }
   },
     }),

@@ -320,7 +320,7 @@ const InvoiceEditor: React.FC = () => {
         top: 0,
         zIndex: 10,}}
       >
-        <Typography fontSize={24} fontWeight={600} color="#535255">
+        <Typography   fontSize={{ xs: 18, md: 24 }} fontWeight={600} color="#535255">
           {invoiceID ? "Edit Invoice" : "New Invoice"}
         </Typography>
 

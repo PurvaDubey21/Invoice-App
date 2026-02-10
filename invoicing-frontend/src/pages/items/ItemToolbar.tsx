@@ -84,74 +84,77 @@ export const ItemToolbar = ({
           ),
         }}
       />
-      <Stack
-          direction="row"
-          spacing={1}
-          width={isMobile ? "100%" : "auto"}
+      <Stack direction="row" spacing={1} width={isMobile ? "100%" : "auto"}>
+        <Box
+          display="flex"
+          gap={1}
+          width={{ xs: "100%", sm: "auto" }}
+          justifyContent={{ xs: "space-between", sm: "flex-end" }}
         >
-      <Box
-        display="flex"
-        gap={1}
-        flexWrap="wrap"
-        justifyContent={{ xs: "flex-start", sm: "flex-end" }}
-      >
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          onClick={onAddItem}
-          sx={{
-            color: "#fff",
-            borderColor: "#525355",
-            backgroundColor: "#525355",
-            textTransform: "none",
-            "&:hover": {
-              borderColor: "#3f4041",
-              backgroundColor: "#3f4041",
-            },
-          }}
-        >
-          Add New Item
-        </Button>
-        <Button
-          startIcon={<DownloadIcon />}
-          variant="outlined"
-          endIcon={<ArrowDropDownIcon />}
-          onClick={handleExportClick}
-          sx={{
-            color: "#525355",
-            borderColor: "#525355",
-            textTransform: "none",
-            "&:hover": {
-              borderColor: "#3f4041",
-              backgroundColor: "rgba(82,83,85,0.04)",
-            },
-          }}
-        >
-          Export
-        </Button>
-        <Menu anchorEl={exportAnchor} open={open} onClose={handleClose}>
-          <MenuItem
-            onClick={() => {
-              onExportCsv();
-              handleClose();
+          <Button
+            startIcon={<AddIcon />}
+            variant="contained"
+            onClick={onAddItem}
+            sx={{
+              color: "#fff",
+              borderColor: "#525355",
+              backgroundColor: "#525355",
+              textTransform: "none",
+              flex: { xs: 1, sm: "unset" },
+              fontWeight: 600,
+              fontSize: 14,
+              "&:hover": {
+                borderColor: "#3f4041",
+                backgroundColor: "#3f4041",
+              },
             }}
           >
-            Export as CSV
-          </MenuItem>
+            Add New Item
+          </Button>
+          <Button
+            startIcon={<DownloadIcon />}
+            variant="outlined"
+            endIcon={<ArrowDropDownIcon />}
+            onClick={handleExportClick}
+            sx={{
+              color: "#525355",
+              borderColor: "#525355",
+              textTransform: "none",
+              flex: { xs: 1, sm: "unset" },
 
-          <MenuItem
-            onClick={() => {
-              onExportExcel();
-              handleClose();
+              fontWeight: 600,
+              fontSize: 14,
+              "&:hover": {
+                borderColor: "#3f4041",
+                backgroundColor: "rgba(82,83,85,0.04)",
+              },
             }}
           >
-            Export as Excel
-          </MenuItem>
-        </Menu>
-        <IconButton onClick={onOpenColumnChooser}>
-          <ViewColumnIcon />
-        </IconButton>
-      </Box>
+            Export
+          </Button>
+          <Menu anchorEl={exportAnchor} open={open} onClose={handleClose}>
+            <MenuItem
+              onClick={() => {
+                onExportCsv();
+                handleClose();
+              }}
+            >
+              Export as CSV
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                onExportExcel();
+                handleClose();
+              }}
+            >
+              Export as Excel
+            </MenuItem>
+          </Menu>
+          <IconButton onClick={onOpenColumnChooser}>
+            <ViewColumnIcon />
+          </IconButton>
+        </Box>
       </Stack>
     </Box>
   );
