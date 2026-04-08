@@ -4,7 +4,20 @@ export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL,
-    credentials: "include", // httpOnly cookie
+
+    // 🔑 JWT attach to every request
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+
+      return headers;
+    },
+
+    // ❌ DO NOT use credentials: 'include'
+    // credentials: 'include',  <-- intentionally removed
   }),
   tagTypes: ["Item", "Invoice", "Auth"],
   endpoints: () => ({}),

@@ -1,3 +1,4 @@
+// cyzo@mailinator.com
 import { useState } from "react";
 import {
   Box,
@@ -18,7 +19,7 @@ import axios from "axios";
 import { Header } from "../../components/layout/Header";
 
 import { loginApi } from "../../services/auth.api";
-import { isValidEmail, isValidPassword } from "../../utils/validators";
+import { isValidEmail, isValidPassword, isEmptyPassword } from "../../utils/validators";
 import { Footer } from "../../components/layout/Footer";
 
 const LoginPage = () => {
@@ -33,39 +34,52 @@ const LoginPage = () => {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    setError("");
+  setError("");
 
-    if (!isValidEmail(email)) {
-      setError("Enter a valid email.");
-      return;
+  if (!isValidEmail(email)) {
+    setError("Enter a valid email.");
+    return;
+  }
+  if(isEmptyPassword(password)){
+    setError("Enter your password.");
+    return;
+  }
+  if (!isValidPassword(password)) {
+    setError("Password must be 8–20 characters.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // 🔹 1️⃣ Call login API
+    const res = await loginApi({
+      email: email.trim(),
+      password,
+      rememberMe,
+    });
+
+    // 🔑 2️⃣ SAVE TOKEN (MOST IMPORTANT FIX)
+    localStorage.setItem("token", res.token);
+
+    // (optional but recommended)
+    localStorage.setItem("user", JSON.stringify(res.user));
+    localStorage.setItem("company", JSON.stringify(res.company));
+
+    // 🚀 3️⃣ Redirect after successful login
+    navigate("/invoices", { replace: true });
+
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      setError(err.response?.data || "Email or password is wrong.");
+    } else {
+      setError("Unexpected error occurred");
     }
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (!isValidPassword(password)) {
-      setError("Password must be 8–20 characters.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await loginApi({
-        email: email.trim(),
-        password,
-        rememberMe,
-      });
-
-      // ✅ Cookie already set by backend
-      navigate("/invoices");
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || "Email or password is wrong.");
-      } else {
-        setError("Unexpected error occurred");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Box
@@ -99,6 +113,7 @@ const LoginPage = () => {
           {error && <Alert severity="error">{error}</Alert>}
           <Typography sx={{ color: "#525355" }}>
             Email Address *
+          </Typography>
             <TextField
               label="Email Address "
               name="login_email"
@@ -107,22 +122,14 @@ const LoginPage = () => {
               margin="normal"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              sx={{
-                "& label.Mui-focused": {
-                  color: "#525355", // 👈 label color on focus
-                },
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#525355", // 👈 border color on focus
-                  },
-                },
-              }}
+              
             />
-          </Typography>
+          
 
           <Typography sx={{ color: "#525355" }}>
             Password *
-            <TextField
+             </Typography>
+          <TextField
               label="Password "
               name="login_password"
               autoComplete="new-password" // 🔥 KEY LINE
@@ -143,18 +150,8 @@ const LoginPage = () => {
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                "& label.Mui-focused": {
-                  color: "#525355", // 👈 label color on focus
-                },
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#525355", // 👈 border color on focus
-                  },
-                },
-              }}
             />
-          </Typography>
+         
 
           <FormControlLabel
             control={
@@ -201,7 +198,9 @@ const LoginPage = () => {
         </Card>
         
       </Box>
-      <Footer />
+      <Footer 
+      message=" © 2025 InvoiceApp. All rights reserved."
+      showLinks />
     </Box>
   );
 };

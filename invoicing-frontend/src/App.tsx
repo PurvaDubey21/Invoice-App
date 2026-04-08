@@ -1,14 +1,18 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import SignupPage from "./pages/auth/SignupPage";
 import LoginPage from "./pages/auth/LoginPage";
-import { InvoicePage } from "./features/invoices/InvoicePage";
+import { InvoicePage } from "./pages/invoices/InvoicePage";
+import  InvoiceEditor  from "./pages/invoices/InvoiceEditor";
 import { ItemListPage } from "./pages/items/ItemListPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
+import { AppLayout } from "./components/layout/AppLayout";
 
 function App() {
   return (
+    <>
     <Routes>
       {/* DEFAULT */}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -18,19 +22,23 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>
-
+     
       {/* PROTECTED ROUTES (login required) */}
       <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
         <Route path="/invoices" element={<InvoicePage />} />
+         <Route path="/invoices/editor" element={<InvoiceEditor />} />
+
          <Route path="/items" element={<ItemListPage />} /> 
 
-        {/* future */}
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        </Route>
       </Route>
 
       {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 }
 

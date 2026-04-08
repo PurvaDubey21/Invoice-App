@@ -12,7 +12,6 @@ import type {
 
 const axiosInstance: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    withCredentials: true, //cookies / jwt support
     timeout: 10000,
     headers: {
         "Content-Type": "application/json",

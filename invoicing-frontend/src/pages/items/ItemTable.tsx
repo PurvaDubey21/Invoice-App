@@ -1,19 +1,46 @@
-import { DataGrid } from "@mui/x-data-grid";
-import { useGetItemsQuery } from "../../services/itemApiRtk";
-import { columns } from "../items/itemColumns";
+import { useMemo } from "react";
+import { getItemColumns } from "./itemColumns";
+import type { Item } from "../../types/itemTypes";
+import { DataTable } from "../../components/common/DataTable";
 
-export const ItemTable = () => {
-  const { data = [], isLoading } = useGetItemsQuery({});
+interface Props {
+  rows: Item[];
+  loading: boolean;
+  visibleColumns: string[];
+  onEditItem: (item: Item) => void;
+  onDeleteItem: (id: number) => void;
+}
 
+export const ItemTable = ({
+  rows,
+  loading,
+  visibleColumns,
+  onEditItem,
+  onDeleteItem,
+}: Props) => {
+   const columnVisibilityModel = useMemo(() => {
+  const model: Record<string, boolean> = {};
+
+  getItemColumns(onEditItem, onDeleteItem).forEach((col) => {
+    // 👇 FORCE picture + actions to be visible
+    if (col.field === "pictureUrl" || col.field === "actions") {
+      model[col.field] = true;
+    } else {
+      model[col.field] = visibleColumns.includes(col.field);
+    }
+  });
+
+  return model;
+}, [visibleColumns, onEditItem, onDeleteItem]);
   return (
-    <DataGrid
-      rows={data}
-      columns={columns}
-      loading={isLoading}
-      autoHeight
+    <DataTable
+      rows={rows}
+      columns={getItemColumns(onEditItem, onDeleteItem)}
+      loading={loading}
+      height={450}
       getRowId={(row) => row.itemID}
-      pageSizeOptions={[10, 25, 50]}
-      disableRowSelectionOnClick
+      columnVisibilityModel={columnVisibilityModel}
+      
     />
   );
 };

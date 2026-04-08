@@ -36,7 +36,11 @@ export const SignupSchema: yup.ObjectSchema<SignupFormValues> = yup.object({
 
   industry: yup.string().trim().max(50).nullable().notRequired(),
 
-  currencySymbol: yup.string().max(5).required("Currency symbol is required"),
+  currencySymbol: yup
+  .string()
+  .max(5)
+  .required("Currency symbol is required")
+  .matches(/^[^\p{L}\p{N}]+$/u, "Only symbols allowed"),
 
   // ✅ IMPORTANT FIX
   logo: yup

@@ -22,7 +22,7 @@ export const StatCard = ({
         height: "100%",
       }}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" fontWeight={600} fontSize={18}>
         {title}
       </Typography>
 
@@ -34,7 +34,8 @@ export const StatCard = ({
         </Typography>
       )}
 
-      {subText && (
+      
+    {subText && (
         <Typography variant="caption" color="text.secondary">
           {subText}
         </Typography>
